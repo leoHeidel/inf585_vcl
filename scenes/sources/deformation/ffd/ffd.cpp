@@ -22,9 +22,9 @@ void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_struct
 {
 
     // Generate the shape to be deformed (Uncomment the following lines to set another shape)
-    shape = mesh_primitive_cylinder(0.5f, {0,0,-0.5f}, {0,0,0.5f}, 30, 15); // Deform a cylinder
-    //  shape = mesh_primitive_parallelepiped_grid(10,10); // Deform a cubic grid
-    //  shape = mesh_load_file_obj("scenes/sources/deformation/ffd/assets/bunny.obj"); // Deform a bunny
+    //shape = mesh_primitive_cylinder(0.5f, {0,0,-0.5f}, {0,0,0.5f}, 30, 15); // Deform a cylinder
+    shape = mesh_primitive_parallelepiped_grid(10,10); // Deform a cubic grid
+    //shape = mesh_load_file_obj("scenes/sources/deformation/ffd/assets/bunny.obj"); // Deform a bunny
 
     // Initialize the visual representation of the shape
     visual = shape;
@@ -72,7 +72,7 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
     set_gui();
 
     if(gui_scene.shape)      draw(visual, scene.camera);
-    if(gui_scene.wireframe)  draw(visual, scene.camera, shaders["wireframe"]);
+    if(gui_scene.wireframe)  draw(visual, scene.camera, shaders["wireframe_quads"]);
 
     if(gui_scene.grid)       display_grid(shaders, scene);
 

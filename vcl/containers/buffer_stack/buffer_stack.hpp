@@ -49,7 +49,7 @@ struct buffer_stack
 template <typename T, size_t N> std::ostream& operator<<(std::ostream& s, buffer_stack<T,N> const& v);
 template <typename T, size_t N> std::string to_string(buffer_stack<T,N> const& v, std::string const& separator=" ");
 
-template <typename T1, typename T2, size_t N1, size_t N2> bool is_equal(buffer<T1> const& a, buffer<T2> const& b);
+template <typename T1, typename T2, size_t N1, size_t N2> bool is_equal(buffer_stack<T1,N1> const& a, buffer_stack<T2,N2> const& b);
 template <typename T, size_t N> bool is_equal(buffer_stack<T,N> const& a, buffer_stack<T,N> const& b);
 
 template <typename T, size_t N> T average(buffer_stack<T,N> const& a);

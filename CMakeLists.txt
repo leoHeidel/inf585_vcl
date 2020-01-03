@@ -13,9 +13,9 @@ endif()
 
 # In Window set directory to precompiled version of glfw3
 if(WIN32)
-    set(GLFW_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../precompiled/glfw3_win/include")
+    set(GLFW_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/lib_windows/glfw3_win/include")
     include_directories(${GLFW_INCLUDE_DIRS})
-    set(GLFW_LIBRARIES "${CMAKE_CURRENT_SOURCE_DIR}/../precompiled/glfw3_win/lib/glfw3.lib")
+    set(GLFW_LIBRARIES "${CMAKE_CURRENT_SOURCE_DIR}/lib_windows/glfw3_win/lib/glfw3.lib")
 endif()
 
 

@@ -3,12 +3,14 @@
 
 #include <sstream>
 
+
+#ifndef _WIN32
 namespace external_backtrace_C{
 #include <execinfo.h> // for backtrace
 }
 #include <dlfcn.h>    // for dladdr
 #include <cxxabi.h>   // for __cxa_demangle
-
+#endif
 
 #include <iostream>
 
@@ -37,6 +39,7 @@ void call_error(std::string assert_arg, std::string message, std::string filenam
     std::exit(EXIT_FAILURE);
 }
 
+#ifndef _WIN32
 std::string backtrace(int const skip)
 {
     void *callstack[128];
@@ -71,7 +74,7 @@ std::string backtrace(int const skip)
         trace_buf << "[truncated]\n";
     return trace_buf.str();
 }
-
+#endif
 
 }
 

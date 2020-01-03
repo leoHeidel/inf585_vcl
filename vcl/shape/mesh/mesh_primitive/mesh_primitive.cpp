@@ -77,8 +77,8 @@ mesh mesh_primitive_sphere(float radius, const vec3& p0, size_t Nu, size_t Nv)
             const float v = static_cast<float>(kv)/static_cast<float>(Nv-1);
 
             // Angles
-            const float theta = static_cast<float>( 3.14159f*u );
-            const float phi   = static_cast<float>( 2*3.14159f*v );
+            const float theta = static_cast<float>( 3.14159f*v );
+            const float phi   = static_cast<float>( 2*3.14159f*u );
 
             // Spherical coordinates
             const float x = radius * std::sin(theta) * std::cos(phi);
@@ -97,7 +97,6 @@ mesh mesh_primitive_sphere(float radius, const vec3& p0, size_t Nu, size_t Nv)
     }
 
     shape.connectivity = connectivity_grid(Nu, Nv, false, false);
-    shape.invert_triangle_orientation();
 
     return shape;
 }
@@ -288,9 +287,8 @@ mesh mesh_primitive_disc(float radius, const vec3& p0, const vec3& n, size_t N)
 mesh mesh_primitive_grid(size_t Nu, size_t Nv, const vec3& p0, const vec3& direction_u, const vec3& direction_v)
 {
     mesh shape;
-    for( size_t ku=0; ku<Nu; ++ku ) {
-        for( size_t kv=0; kv<Nv; ++kv ) {
-
+    for( size_t kv=0; kv<Nv; ++kv ) {
+        for( size_t ku=0; ku<Nu; ++ku ) {
             const float u = static_cast<float>(ku)/static_cast<float>(Nu-1);
             const float v = static_cast<float>(kv)/static_cast<float>(Nv-1);
 
@@ -304,7 +302,6 @@ mesh mesh_primitive_grid(size_t Nu, size_t Nv, const vec3& p0, const vec3& direc
     }
 
     shape.connectivity = connectivity_grid(Nu, Nv, false, false);
-    shape.invert_triangle_orientation();
 
     return shape;
 

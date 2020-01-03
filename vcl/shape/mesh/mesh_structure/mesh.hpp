@@ -39,8 +39,6 @@ struct mesh
     void fill_color_uniform(const vec3& c);
     void fill_color_uniform(const vec4& c);
 
-    /** Invert orientation of normals */
-    void invert_triangle_orientation();
 };
 
 /** Compute per-vertex normals given a set of position coordinates and triangle index connectivity */

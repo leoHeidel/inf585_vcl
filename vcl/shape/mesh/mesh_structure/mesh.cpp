@@ -128,15 +128,6 @@ void mesh::fill_color_uniform(const vec4& c)
         color[k] = c;
 }
 
-void mesh::invert_triangle_orientation()
-{
-    for(size_t k=0; k<connectivity.size(); ++k)
-    {
-        uint3& t = connectivity[k];
-        std::swap(t[1],t[2]);
-    }
-}
-
 
 vec3 center_of_mass(const mesh& shape)
 {

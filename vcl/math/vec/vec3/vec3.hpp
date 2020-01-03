@@ -15,8 +15,8 @@ template <> struct buffer_stack<float, 3> {
     float y;
     float z;
 
-    vec<3>();
-    vec<3>(float x,float y,float z);
+	buffer_stack<float, 3>();
+	buffer_stack<float, 3>(float x,float y,float z);
 
     /** Get operator at given index */
     const float& operator[](std::size_t index) const;

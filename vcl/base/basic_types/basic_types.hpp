@@ -7,7 +7,7 @@ namespace vcl
 
 bool is_equal(int a, int b);
 bool is_equal(unsigned int a, unsigned int b);
-bool is_equal(unsigned long a, unsigned long b);
+bool is_equal(size_t a, size_t b);
 bool is_equal(float a, float b);
 bool is_equal(double a, double b);
 

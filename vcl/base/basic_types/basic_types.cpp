@@ -8,7 +8,7 @@ namespace vcl
 
 bool is_equal(int a, int b) { return a==b; }
 bool is_equal(unsigned int a, unsigned int b) { return a==b; }
-bool is_equal(unsigned long a, unsigned long b) { return a==b; }
+bool is_equal(size_t a, size_t b) { return a==b; }
 bool is_equal(float a, float b)
 {
     return std::abs(a-b) <= 1e-6f;
