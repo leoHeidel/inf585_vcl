@@ -66,16 +66,16 @@ template <typename T> buffer2D<T>  operator-(buffer2D<T> const& a, T const& b);
 template <typename T> buffer2D<T>  operator-(T const& a, buffer2D<T> const& b);
 
 template <typename T> buffer2D<T>& operator*=(buffer2D<T>& a, buffer2D<T> const& b);
-template <typename T> buffer2D<T>& operator*=(buffer2D<T>& a, T const& b);
+template <typename T> buffer2D<T>& operator*=(buffer2D<T>& a, float b);
 template <typename T> buffer2D<T>  operator*(buffer2D<T> const& a, buffer2D<T> const& b);
-template <typename T> buffer2D<T>  operator*(buffer2D<T> const& a, T const& b);
-template <typename T> buffer2D<T>  operator*(T const& a, buffer2D<T> const& b);
+template <typename T> buffer2D<T>  operator*(buffer2D<T> const& a, float b);
+template <typename T> buffer2D<T>  operator*(float a, buffer2D<T> const& b);
 
 template <typename T> buffer2D<T>& operator/=(buffer2D<T>& a, buffer2D<T> const& b);
-template <typename T> buffer2D<T>& operator/=(buffer2D<T>& a, T const& b);
+template <typename T> buffer2D<T>& operator/=(buffer2D<T>& a, float b);
 template <typename T> buffer2D<T>  operator/(buffer2D<T> const& a, buffer2D<T> const& b);
-template <typename T> buffer2D<T>  operator/(buffer2D<T> const& a, T const& b);
-template <typename T> buffer2D<T>  operator/(T const& a, buffer2D<T> const& b);
+template <typename T> buffer2D<T>  operator/(buffer2D<T> const& a, float b);
+template <typename T> buffer2D<T>  operator/(float a, buffer2D<T> const& b);
 
 }
 
@@ -335,7 +335,7 @@ template <typename T> buffer2D<T>& operator*=(buffer2D<T>& a, buffer2D<T> const&
     assert_vcl( is_equal(a.dimension,b.dimension), "Dimension do not agree: a:"+str(a.dimension)+", b:"+str(b.dimension) );
     a.data *= b.data;
 }
-template <typename T> buffer2D<T>& operator*=(buffer2D<T>& a, T const& b)
+template <typename T> buffer2D<T>& operator*=(buffer2D<T>& a, float b)
 {
     a.data *= b;
 }
@@ -346,13 +346,13 @@ template <typename T> buffer2D<T>  operator*(buffer2D<T> const& a, buffer2D<T> c
     res.data = a.data*b.data;
     return res;
 }
-template <typename T> buffer2D<T>  operator*(buffer2D<T> const& a, T const& b)
+template <typename T> buffer2D<T>  operator*(buffer2D<T> const& a, float b)
 {
     buffer2D<T> res(a.dimension);
     res.data = a.data*b;
     return res;
 }
-template <typename T> buffer2D<T>  operator*(T const& a, buffer2D<T> const& b)
+template <typename T> buffer2D<T>  operator*(float a, buffer2D<T> const& b)
 {
     buffer2D<T> res(b.dimension);
     res.data = a*b.data;
@@ -364,7 +364,7 @@ template <typename T> buffer2D<T>& operator/=(buffer2D<T>& a, buffer2D<T> const&
     assert_vcl( is_equal(a.dimension,b.dimension), "Dimension do not agree: a:"+str(a.dimension)+", b:"+str(b.dimension) );
     a.data /= b.data;
 }
-template <typename T> buffer2D<T>& operator/=(buffer2D<T>& a, T const& b)
+template <typename T> buffer2D<T>& operator/=(buffer2D<T>& a, float b)
 {
     a.data *= b;
 }
@@ -375,13 +375,13 @@ template <typename T> buffer2D<T>  operator/(buffer2D<T> const& a, buffer2D<T> c
     res.data = a.data/b.data;
     return res;
 }
-template <typename T> buffer2D<T>  operator/(buffer2D<T> const& a, T const& b)
+template <typename T> buffer2D<T>  operator/(buffer2D<T> const& a, float b)
 {
     buffer2D<T> res(a.dimension);
     res.data = a.data/b;
     return res;
 }
-template <typename T> buffer2D<T>  operator/(T const& a, buffer2D<T> const& b)
+template <typename T> buffer2D<T>  operator/(float a, buffer2D<T> const& b)
 {
     buffer2D<T> res(b.dimension);
     res.data = a/b.data;

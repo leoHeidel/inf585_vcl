@@ -68,16 +68,16 @@ template <typename T> buffer<T>  operator-(buffer<T> const& a, T const& b);
 template <typename T> buffer<T>  operator-(T const& a, buffer<T> const& b);
 
 template <typename T> buffer<T>& operator*=(buffer<T>& a, buffer<T> const& b);
-template <typename T> buffer<T>& operator*=(buffer<T>& a, T const& b);
 template <typename T> buffer<T>  operator*(buffer<T> const& a, buffer<T> const& b);
-template <typename T> buffer<T>  operator*(buffer<T> const& a, T const& b);
-template <typename T> buffer<T>  operator*(T const& a, buffer<T> const& b);
+template <typename T> buffer<T>& operator*=(buffer<T>& a, float b);
+template <typename T> buffer<T>  operator*(buffer<T> const& a, float b);
+template <typename T> buffer<T>  operator*(float a, buffer<T> const& b);
 
 template <typename T> buffer<T>& operator/=(buffer<T>& a, buffer<T> const& b);
-template <typename T> buffer<T>& operator/=(buffer<T>& a, T const& b);
+template <typename T> buffer<T>& operator/=(buffer<T>& a, float b);
 template <typename T> buffer<T>  operator/(buffer<T> const& a, buffer<T> const& b);
-template <typename T> buffer<T>  operator/(buffer<T> const& a, T const& b);
-template <typename T> buffer<T>  operator/(T const& a, buffer<T> const& b);
+template <typename T> buffer<T>  operator/(buffer<T> const& a, float b);
+template <typename T> buffer<T>  operator/(float a, buffer<T> const& b);
 
 
 }
@@ -348,27 +348,32 @@ template <typename T> buffer<T>& operator*=(buffer<T>& a, buffer<T> const& b)
         a[k] *= b[k];
     return a;
 }
-template <typename T> buffer<T>& operator*=(buffer<T>& a, T const& b)
-{
-    assert_vcl(a.size()>0, "Size must be >0");
-    const size_t N = a.size();
-    for(size_t k=0; k<N; ++k)
-        a[k] *= b;
-    return a;
-}
 template <typename T> buffer<T>  operator*(buffer<T> const& a, buffer<T> const& b)
 {
     buffer<T> res = a;
     res *= b;
     return res;
 }
-template <typename T> buffer<T>  operator*(buffer<T> const& a, T const& b)
+
+
+
+
+template <typename T> buffer<T>& operator*=(buffer<T>& a, float b)
 {
-    buffer<T> res = a;
-    res *= b;
+    size_t const N = a.size();
+    for(size_t k=0; k<N; ++k)
+        a[k] *= b;
+    return a;
+}
+template <typename T> buffer<T>  operator*(buffer<T> const& a, float b)
+{
+    size_t const N = a.size();
+    buffer<T> res(N);
+    for(size_t k=0; k<N; ++k)
+        res[k] = a[k]*b;
     return res;
 }
-template <typename T> buffer<T>  operator*(T const& a, buffer<T> const& b)
+template <typename T> buffer<T>  operator*(float a, buffer<T> const& b)
 {
     size_t const N = b.size();
     buffer<T> res(N);
@@ -387,7 +392,7 @@ template <typename T> buffer<T>& operator/=(buffer<T>& a, buffer<T> const& b)
         a[k] /= b[k];
     return a;
 }
-template <typename T> buffer<T>& operator/=(buffer<T>& a, T const& b)
+template <typename T> buffer<T>& operator/=(buffer<T>& a, float b)
 {
     assert_vcl(a.size()>0, "Size must be >0");
     const size_t N = a.size();
@@ -401,13 +406,13 @@ template <typename T> buffer<T>  operator/(buffer<T> const& a, buffer<T> const& 
     res /= b;
     return res;
 }
-template <typename T> buffer<T>  operator/(buffer<T> const& a, T const& b)
+template <typename T> buffer<T>  operator/(buffer<T> const& a, float b)
 {
     buffer<T> res = a;
     res /= b;
     return res;
 }
-template <typename T> buffer<T>  operator/(T const& a, buffer<T> const& b)
+template <typename T> buffer<T>  operator/(float a, buffer<T> const& b)
 {
     size_t const N = b.size();
     buffer<T> res(N);

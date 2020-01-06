@@ -6,7 +6,7 @@
 //  This can be done manually or using the automatic script
 
 #include "scenes/sources/default/animation/default_animation.hpp"
-#include "scenes/sources/deformation/ffd/ffd.hpp"
-#include "scenes/sources/deformation/local_deformers/local_deformers.hpp"
+#include "scenes/sources/ffd/ffd.hpp"
+#include "scenes/sources/interpolation/blend_shape/blend_shape.hpp"
 #include "scenes/sources/particles_trajectory/bouncing_spheres/bouncing_spheres.hpp"
 #include "scenes/sources/particles_trajectory/sprites/sprites.hpp"

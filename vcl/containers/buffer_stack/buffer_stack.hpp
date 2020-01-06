@@ -69,16 +69,16 @@ template <typename T, size_t N> buffer_stack<T,N>  operator-(buffer_stack<T,N> c
 template <typename T, size_t N> buffer_stack<T,N>  operator-(T const& a, buffer_stack<T,N> const& b);
 
 template <typename T, size_t N> buffer_stack<T,N>& operator*=(buffer_stack<T,N>& a, buffer_stack<T,N> const& b);
-template <typename T, size_t N> buffer_stack<T,N>& operator*=(buffer_stack<T,N>& a, T const& b);
+template <typename T, size_t N> buffer_stack<T,N>& operator*=(buffer_stack<T,N>& a, float b);
 template <typename T, size_t N> buffer_stack<T,N>  operator*(buffer_stack<T,N> const& a, buffer_stack<T,N> const& b);
-template <typename T, size_t N> buffer_stack<T,N>  operator*(buffer_stack<T,N> const& a, T const& b);
-template <typename T, size_t N> buffer_stack<T,N>  operator*(T const& a, buffer_stack<T,N> const& b);
+template <typename T, size_t N> buffer_stack<T,N>  operator*(buffer_stack<T,N> const& a, float b);
+template <typename T, size_t N> buffer_stack<T,N>  operator*(float a, buffer_stack<T,N> const& b);
 
 template <typename T, size_t N> buffer_stack<T,N>& operator/=(buffer_stack<T,N>& a, buffer_stack<T,N> const& b);
-template <typename T, size_t N> buffer_stack<T,N>& operator/=(buffer_stack<T,N>& a, T const& b);
+template <typename T, size_t N> buffer_stack<T,N>& operator/=(buffer_stack<T,N>& a, float b);
 template <typename T, size_t N> buffer_stack<T,N>  operator/(buffer_stack<T,N> const& a, buffer_stack<T,N> const& b);
-template <typename T, size_t N> buffer_stack<T,N>  operator/(buffer_stack<T,N> const& a, T const& b);
-template <typename T, size_t N> buffer_stack<T,N>  operator/(T const& a, buffer_stack<T,N> const& b);
+template <typename T, size_t N> buffer_stack<T,N>  operator/(buffer_stack<T,N> const& a, float b);
+template <typename T, size_t N> buffer_stack<T,N>  operator/(float a, buffer_stack<T,N> const& b);
 
 }
 
@@ -284,7 +284,7 @@ template <typename T, size_t N> buffer_stack<T,N>& operator*=(buffer_stack<T,N>&
         a[k] *= b[k];
     return a;
 }
-template <typename T, size_t N> buffer_stack<T,N>& operator*=(buffer_stack<T,N>& a, T const& b)
+template <typename T, size_t N> buffer_stack<T,N>& operator*=(buffer_stack<T,N>& a, float b)
 {
     for(size_t k=0; k<N; ++k)
         a[k] *= b;
@@ -297,14 +297,14 @@ template <typename T, size_t N> buffer_stack<T,N>  operator*(buffer_stack<T,N> c
         res[k] = a[k] * b[k];
     return res;
 }
-template <typename T, size_t N> buffer_stack<T,N>  operator*(buffer_stack<T,N> const& a, T const& b)
+template <typename T, size_t N> buffer_stack<T,N>  operator*(buffer_stack<T,N> const& a, float b)
 {
     buffer_stack<T,N> res;
     for(size_t k=0; k<N; ++k)
         res[k] = a[k] * b;
     return res;
 }
-template <typename T, size_t N> buffer_stack<T,N>  operator*(T const& a, buffer_stack<T,N> const& b)
+template <typename T, size_t N> buffer_stack<T,N>  operator*(float a, buffer_stack<T,N> const& b)
 {
     buffer_stack<T,N> res;
     for(size_t k=0; k<N; ++k)
@@ -319,7 +319,7 @@ template <typename T, size_t N> buffer_stack<T,N>& operator/=(buffer_stack<T,N>&
         res[k] = a[k] / b[k];
     return res;
 }
-template <typename T, size_t N> buffer_stack<T,N>& operator/=(buffer_stack<T,N>& a, T const& b)
+template <typename T, size_t N> buffer_stack<T,N>& operator/=(buffer_stack<T,N>& a, float b)
 {
     for(size_t k=0; k<N; ++k)
         a[k] /= b;
@@ -332,14 +332,14 @@ template <typename T, size_t N> buffer_stack<T,N>  operator/(buffer_stack<T,N> c
         res[k] = a[k] / b[k];
     return res;
 }
-template <typename T, size_t N> buffer_stack<T,N>  operator/(buffer_stack<T,N> const& a, T const& b)
+template <typename T, size_t N> buffer_stack<T,N>  operator/(buffer_stack<T,N> const& a, float b)
 {
     buffer_stack<T,N> res;
     for(size_t k=0; k<N; ++k)
         res[k] = a[k] / b;
     return res;
 }
-template <typename T, size_t N> buffer_stack<T,N>  operator/(T const& a, buffer_stack<T,N> const& b)
+template <typename T, size_t N> buffer_stack<T,N>  operator/(float a, buffer_stack<T,N> const& b)
 {
     buffer_stack<T,N> res;
     for(size_t k=0; k<N; ++k)

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../vec/vec.hpp"
+#include "vcl/containers/buffer_stack/buffer_stack.hpp"
 
 namespace vcl {
 
-/** vec2 is an alias on a generic vec<2> */
+/** vec2 is an alias on a generic buffer_stack<float, 2> */
 using vec2 = buffer_stack<float, 2>;
 
 template <> struct buffer_stack<float, 2> {
