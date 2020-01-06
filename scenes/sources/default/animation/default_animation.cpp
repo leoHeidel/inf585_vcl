@@ -90,7 +90,7 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
     // ********************************************* //
 
     // the general syntax to display a mesh is:
-    //    objectName.draw(shaderName, camera);
+    //   draw(objectName, camera [,optional: shaderID ]);
     draw(plane, scene.camera);
 
 
