@@ -40,6 +40,38 @@ float& vec2::operator[](std::size_t index)
 	abort();
 }
 
+size_t vec2::size() const
+{
+    return 2;
+}
+
+
+const float& vec2::operator()(std::size_t index) const
+{
+    return (*this)[index];
+}
+float& vec2::operator()(std::size_t index)
+{
+    return (*this)[index];
+}
+
+float const& vec2::at(std::size_t index) const
+{
+    return (*this)[index];
+}
+float& vec2::at(std::size_t index)
+{
+    return (*this)[index];
+}
+
+
+float* vec2::begin() { return &x; }
+float* vec2::end() { return &y+1; }
+float const* vec2::begin() const { return &x; }
+float const* vec2::end() const { return &y+1; }
+float const* vec2::cbegin() const { return &x; }
+float const* vec2::cend() const { return &y+1; }
+
 
 
 }

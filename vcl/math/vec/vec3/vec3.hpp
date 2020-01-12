@@ -18,10 +18,31 @@ template <> struct buffer_stack<float, 3> {
 	buffer_stack<float, 3>();
 	buffer_stack<float, 3>(float x,float y,float z);
 
+    size_t size() const;
+
     /** Get operator at given index */
     const float& operator[](std::size_t index) const;
     /** Set operator at given index */
     float& operator[](std::size_t index);
+
+    /** Get operator at given index */
+    const float& operator()(std::size_t index) const;
+    /** Set operator at given index */
+    float& operator()(std::size_t index);
+
+    /** Get operator at given index */
+    float const& at(std::size_t index) const;
+    /** Set operator at given index */
+    float& at(std::size_t index);
+
+
+    float* begin();
+    float* end();
+    float const* begin() const;
+    float const* end() const;
+    float const* cbegin() const;
+    float const* cend() const;
+
 };
 
 /** Cross product between two vec3 */

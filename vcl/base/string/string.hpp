@@ -19,6 +19,8 @@ template <typename T>
 std::string to_string(std::vector<T> v, const std::string& separator=" ");
 std::string to_string(std::string const& s);
 
+bool is_equal(std::string const& a, std::string const& b);
+
 namespace detail{
 template <typename T>
 std::string to_string_container(T const& v, const std::string& separator=" ");

@@ -11,6 +11,10 @@
 #ifndef EIGEN_JACOBI_H
 #define EIGEN_JACOBI_H
 
+#ifdef __linux__
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
+
 namespace Eigen { 
 
 /** \ingroup Jacobi_Module

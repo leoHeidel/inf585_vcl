@@ -10,6 +10,8 @@
 #ifndef EIGEN_LEAST_SQUARE_CONJUGATE_GRADIENT_H
 #define EIGEN_LEAST_SQUARE_CONJUGATE_GRADIENT_H
 
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+
 namespace Eigen { 
 
 namespace internal {

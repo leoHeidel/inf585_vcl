@@ -6,8 +6,7 @@ add_definitions(-DIMGUI_IMPL_OPENGL_LOADER_GLAD)
 
 # Add G++ Warning on Unix
 if(UNIX)
-    add_definitions(-g -O3
-        -std=c++11 -Wall -Wextra -pedantic -Weffc++ -Wcast-align -Wcast-qual -Wconversion -Wshadow -Wdisabled-optimization -Wfloat-equal -Wformat  -Wformat=2 -Wformat-nonliteral -Wformat-security -Wformat-y2k -Winvalid-pch -Wmissing-format-attribute -Wmissing-include-dirs -Wmissing-noreturn -Wpacked -Wpointer-arith -Wredundant-decls -Wswitch-enum -Wswitch-default -Wunreachable-code -Wwrite-strings -fdiagnostics-color=always -Wno-missing-braces -Wno-sign-conversion)
+add_definitions(-g -O2 -std=c++11 -Wall -Wextra)
     set(CMAKE_CXX_COMPILER g++)
     find_package(glfw3 REQUIRED) #Expect glfw3 to be installed on your system
 endif()
@@ -36,7 +35,7 @@ add_executable(pgm ${source_files})
 
 
 if(UNIX)
-    target_link_libraries(pgm glfw dl -static-libstdc++)
+target_link_libraries(pgm glfw dl -static-libstdc++)
 endif()
 
 if(WIN32)

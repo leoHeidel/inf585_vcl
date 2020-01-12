@@ -19,6 +19,7 @@ struct mat<3,3> {
     mat<3,3>(float xx,float xy,float xz,
              float yx,float yy,float yz,
              float zx,float zy,float zz);
+    mat<3,3>(vec3 const& column0, vec3 const& column1, vec3 const& column2);
 
 
     static mat3 zero();

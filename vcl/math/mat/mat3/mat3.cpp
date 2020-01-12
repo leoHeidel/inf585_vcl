@@ -16,6 +16,11 @@ mat3::mat(float xx_arg,float xy_arg,float xz_arg,
       yx(yx_arg),yy(yy_arg),yz(yz_arg),
       zx(zx_arg),zy(zy_arg),zz(zz_arg)
 {}
+mat3::mat(vec3 const& column0, vec3 const& column1, vec3 const& column2)
+    :xx(column0.x),xy(column1.x),xz(column2.x),
+      yx(column0.y),yy(column1.y),yz(column2.y),
+      zx(column0.z),zy(column1.z),zz(column2.z)
+{}
 
 mat3 mat3::identity()
 {
@@ -227,7 +232,7 @@ float det(const mat3& m)
 mat3 inverse(const mat3& m)
 {
     const float d = det(m);
-    assert( std::abs(d)>1e-5f );
+    assert( std::abs(d)>1e-6f );
 
     const float x00 =   m[4]*m[8]-m[7]*m[5];
     const float x01 = -(m[1]*m[8]-m[7]*m[2]);

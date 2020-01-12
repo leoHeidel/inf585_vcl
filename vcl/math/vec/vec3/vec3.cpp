@@ -42,6 +42,55 @@ float& vec3::operator[](std::size_t index)
 
 }
 
+size_t vec3::size() const
+{
+    return 3;
+}
+
+
+const float& vec3::operator()(std::size_t index) const
+{
+    return (*this)[index];
+}
+float& vec3::operator()(std::size_t index)
+{
+    return (*this)[index];
+}
+float const& vec3::at(std::size_t index) const
+{
+    return (*this)[index];
+}
+float& vec3::at(std::size_t index)
+{
+    return (*this)[index];
+}
+
+
+float* vec3::begin()
+{
+    return &x;
+}
+float* vec3::end()
+{
+    return &z+1;
+}
+float const* vec3::begin() const
+{
+    return &x;
+}
+float const* vec3::end() const
+{
+    return &z+1;
+}
+float const* vec3::cbegin() const
+{
+    return &x;
+}
+float const* vec3::cend() const
+{
+    return &z+1;
+}
+
 vec3 cross(const vec3& a,const vec3& b)
 {
     return    { a.y*b.z-a.z*b.y,

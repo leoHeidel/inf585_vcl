@@ -47,7 +47,25 @@ float& vec4::operator[](std::size_t index)
     }
 	abort();
 }
+size_t vec4::size() const
+{
+    return 4;
+}
 
+
+const float& vec4::operator()(std::size_t index) const {return (*this)[index];}
+float& vec4::operator()(std::size_t index) {return (*this)[index];}
+
+float const& vec4::at(std::size_t index) const {return (*this)[index];}
+float& vec4::at(std::size_t index) {return (*this)[index];}
+
+
+float* vec4::begin() {return &x;}
+float*vec4:: end() {return &w+1;}
+float const* vec4::begin() const {return &x;}
+float const* vec4::end() const {return &w+1;}
+float const* vec4::cbegin() const {return &x;}
+float const* vec4::cend() const {return &w+1;}
 
 
 }

@@ -9,7 +9,7 @@ DEPS := $(OBJS:.o=.d)
 
 INC_DIRS  := .
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
-CPPFLAGS += $(INC_FLAGS) -MMD -MP -DIMGUI_IMPL_OPENGL_LOADER_GLAD -g -O2 -Wall -Wextra
+CPPFLAGS += $(INC_FLAGS) -MMD -MP -DIMGUI_IMPL_OPENGL_LOADER_GLAD -g -O2 -std=c++11 -Wall -Wextra
 LDLIBS += -lglfw -ldl -lm
 
 $(TARGET): $(OBJS)

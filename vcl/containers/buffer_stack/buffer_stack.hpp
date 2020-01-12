@@ -84,9 +84,12 @@ template <typename T, size_t N> buffer_stack<T,N>  operator/(float a, buffer_sta
 
 
 
+
 /** ******************************************* **/
 /**           Template implementation           **/
 /** ******************************************* **/
+
+
 
 namespace vcl
 {
@@ -193,7 +196,7 @@ template <typename T, size_t N> T average(buffer_stack<T,N> const& a)
 {
     static_assert(N>0, "Cannot compute average of empty buffer");
 
-    T value(); // assume value start at zero
+    T value {}; // assume value start at zero
     for(size_t k=0; k<N; ++k)
         value += a[k];
     value /= float(N);

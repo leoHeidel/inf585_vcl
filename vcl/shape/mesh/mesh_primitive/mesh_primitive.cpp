@@ -101,18 +101,19 @@ mesh mesh_primitive_sphere(float radius, const vec3& p0, size_t Nu, size_t Nv)
     return shape;
 }
 
-mesh mesh_primitive_cylinder(float radius,  const vec3& p1, const vec3& p2, size_t Nu, size_t Nv)
+mesh mesh_primitive_cylinder(float radius,  const vec3& p1, const vec3& p2, size_t Nu, size_t Nv, bool is_border_duplicated)
 {
     const vec3 p12 = p2-p1;
     const float L = norm(p12);
     const vec3 dir = p12/L;
-    const mat3 R = rotation_between_vector_mat3({0,0,1},dir);
+    const mat3 R = rotation_between_vector_mat3({0,0,1}, dir);
 
     mesh shape;
+    float const Nu_interval = is_border_duplicated? float(Nu) : float(Nu-1);
     for( size_t ku=0; ku<Nu; ++ku ) {
         for( size_t kv=0; kv<Nv; ++kv ) {
 
-            const float u = static_cast<float>(ku)/static_cast<float>(Nu-1);
+            const float u = static_cast<float>(ku)/Nu_interval;
             const float v = static_cast<float>(kv)/static_cast<float>(Nv-1);
 
             const float theta = static_cast<float>( 2* 3.14159f * u );
@@ -132,21 +133,23 @@ mesh mesh_primitive_cylinder(float radius,  const vec3& p1, const vec3& p2, size
         }
     }
 
-    shape.connectivity = connectivity_grid(Nu, Nv, false, false);
+    shape.connectivity = connectivity_grid(Nu, Nv, is_border_duplicated, false);
 
     return shape;
 }
 
-mesh mesh_primitive_torus(float R, float r, const vec3& center, const vec3& axis_direction, size_t Nu, size_t Nv)
+mesh mesh_primitive_torus(float R, float r, const vec3& center, const vec3& axis_direction, size_t Nu, size_t Nv, bool is_border_duplicated)
 {
     const mat3 Rotation = rotation_between_vector_mat3({0,0,1},axis_direction);
 
     mesh shape;
+    float const Nu_interval = is_border_duplicated? float(Nu) : float(Nu-1);
+    float const Nv_interval = is_border_duplicated? float(Nv) : float(Nv-1);
     for( size_t ku=0; ku<Nu; ++ku ) {
         for( size_t kv=0; kv<Nv; ++kv ) {
 
-            const float u = static_cast<float>(ku)/static_cast<float>(Nu);
-            const float v = static_cast<float>(kv)/static_cast<float>(Nv);
+            const float u = static_cast<float>(ku)/Nu_interval;
+            const float v = static_cast<float>(kv)/Nv_interval;
 
             const float theta = static_cast<float>( 2* 3.14159f * u );
             const float phi   = static_cast<float>( 2* 3.14159f * v );
@@ -167,7 +170,7 @@ mesh mesh_primitive_torus(float R, float r, const vec3& center, const vec3& axis
         }
     }
 
-    shape.connectivity = connectivity_grid(Nu, Nv, true, true);
+    shape.connectivity = connectivity_grid(Nu, Nv, is_border_duplicated, is_border_duplicated);
 
     return shape;
 }

@@ -11,6 +11,10 @@
 #ifndef EIGEN_JACOBISVD_H
 #define EIGEN_JACOBISVD_H
 
+#ifdef __linux__
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
+
 namespace Eigen { 
 
 namespace internal {

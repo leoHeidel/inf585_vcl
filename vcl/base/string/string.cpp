@@ -18,5 +18,10 @@ std::string to_string(std::string const& s)
     return s;
 }
 
+bool is_equal(std::string const& a, std::string const& b)
+{
+    return a==b;
+}
+
 
 }

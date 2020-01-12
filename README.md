@@ -14,8 +14,6 @@ The following command assume you have opened a command line in the directory vcl
 
 ### Create a build directory
 
-$ cd cmake
-
 $ mkdir build
 
 $ cd build
@@ -26,11 +24,11 @@ $ cmake ..
 
 $ make
 
-$ cd ../..
+$ cd ..
 
 ### Execute
 
-$ cmake/build/pgm
+$ build/pgm
 
 (note: the build directory is temporary and can be removed safely when switching between different computers)
 
@@ -38,16 +36,16 @@ $ cmake/build/pgm
 
 When editing the source code (without adding/removing files), you don't need to run CMake every time, but only call Makefile. The following command can be used from the vcl/ directory:
 
-$ make -C cmake/build/
+$ make -C build/
 
-$ cmake/build/pgm
+$ build/pgm
 
 
 ## Using QTCreator with CMake (Linux/MacOs)
 
 Call qtcreator from vcl/ directory
 
-$ qtcreator cmake/CMakeLists.txt &
+$ qtcreator CMakeLists.txt &
 
 Then follow the configuration steps from the GUI.
 
