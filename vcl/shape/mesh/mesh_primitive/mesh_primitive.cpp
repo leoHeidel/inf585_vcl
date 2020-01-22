@@ -290,6 +290,7 @@ mesh mesh_primitive_disc(float radius, const vec3& p0, const vec3& n, size_t N)
 mesh mesh_primitive_grid(size_t Nu, size_t Nv, const vec3& p0, const vec3& direction_u, const vec3& direction_v)
 {
     mesh shape;
+
     for( size_t kv=0; kv<Nv; ++kv ) {
         for( size_t ku=0; ku<Nu; ++ku ) {
             const float u = static_cast<float>(ku)/static_cast<float>(Nu-1);
@@ -304,7 +305,8 @@ mesh mesh_primitive_grid(size_t Nu, size_t Nv, const vec3& p0, const vec3& direc
         }
     }
 
-    shape.connectivity = connectivity_grid(Nu, Nv, false, false);
+    shape.connectivity = connectivity_grid(Nv, Nu, false, false);
+
 
     return shape;
 
@@ -354,17 +356,17 @@ mesh mesh_primitive_parallelepiped(const vec3& p0, const vec3& u1, const vec3& u
     return shape;
 }
 
-mesh mesh_primitive_parallelepiped_grid(int Nu, int Nv, const vec3& p0, const vec3& direction_u, const vec3& direction_v, const vec3& direction_w)
+mesh mesh_primitive_bar_grid(int Nu, int Nv , int Nw, const vec3& p0, const vec3& direction_u, const vec3& direction_v, const vec3& direction_w)
 {
     const vec3 p1 = p0 + direction_u+direction_v+direction_w;
 
-    mesh shape = mesh_primitive_grid(Nu,Nv, p0, direction_v, direction_u);
-    shape.push_back(mesh_primitive_grid(Nu,Nv, p0, direction_u, direction_w));
-    shape.push_back(mesh_primitive_grid(Nu,Nv, p0, direction_w, direction_v));
+    mesh shape = mesh_primitive_grid(Nv,Nu, p0, direction_v, direction_u);
+    shape.push_back(mesh_primitive_grid(Nu,Nw, p0, direction_u, direction_w));
+    shape.push_back(mesh_primitive_grid(Nw,Nv, p0, direction_w, direction_v));
 
     shape.push_back(mesh_primitive_grid(Nu,Nv, p1, -direction_u, -direction_v));
-    shape.push_back(mesh_primitive_grid(Nu,Nv, p1, -direction_w, -direction_u));
-    shape.push_back(mesh_primitive_grid(Nu,Nv, p1, -direction_v, -direction_w));
+    shape.push_back(mesh_primitive_grid(Nw,Nu, p1, -direction_w, -direction_u));
+    shape.push_back(mesh_primitive_grid(Nv,Nw, p1, -direction_v, -direction_w));
 
     return shape;
 

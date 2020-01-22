@@ -10,7 +10,6 @@
 
 
 
-
 // ************************************** //
 // Global data declaration
 // ************************************** //
@@ -62,7 +61,6 @@ int main()
 
     load_shaders(shaders);
     setup_scene(scene, gui, shaders);
-
 
     opengl_debug();
     std::cout<<"*** Setup Data ***"<<std::endl;

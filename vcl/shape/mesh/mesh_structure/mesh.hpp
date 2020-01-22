@@ -28,7 +28,7 @@ struct mesh
     buffer<vec2> texture_uv;
 
     /** Triangle connectivity */
-    std::vector<uint3> connectivity;
+    buffer<uint3> connectivity;
 
     /** Fill all per-vertex attributes with default values if they are empty (ex. color to white, and 0 for texture-uv)*/
     void fill_empty_fields();

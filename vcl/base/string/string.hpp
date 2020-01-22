@@ -18,6 +18,7 @@ std::string to_string(std::array<T,N> v, const std::string& separator=" ");
 template <typename T>
 std::string to_string(std::vector<T> v, const std::string& separator=" ");
 std::string to_string(std::string const& s);
+std::string to_string(char const* s);
 
 bool is_equal(std::string const& a, std::string const& b);
 

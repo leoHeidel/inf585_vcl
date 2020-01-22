@@ -34,6 +34,6 @@ mesh mesh_primitive_parallelepiped(const vec3& p0={-0.5,-0.5,-0.5}, const vec3& 
 mesh mesh_primitive_frame(float sphere_radius=0.15f, float cylinder_radius=0.05f, float cone_radius=0.15f, float cone_length=0.3f);
 
 mesh mesh_primitive_grid(size_t Nu=10, size_t Nv=10, const vec3& p0={0,0,0}, const vec3& direction_u={1,0,0}, const vec3& direction_v={0,1,0});
-mesh mesh_primitive_parallelepiped_grid(int Nu=10, int Nv=10, const vec3& p0={-0.5,-0.5,-0.5}, const vec3& direction_u={1,0,0}, const vec3& direction_v={0,1,0}, const vec3& direction_w={0,0,1});
+mesh mesh_primitive_bar_grid(int Nu=10, int Nv=10, int Nw=10, const vec3& p0={-0.5,-0.5,-0.5}, const vec3& direction_u={1,0,0}, const vec3& direction_v={0,1,0}, const vec3& direction_w={0,0,1});
 
 }

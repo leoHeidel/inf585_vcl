@@ -32,7 +32,7 @@ std::string backtrace(int const skip=1);
 #ifdef _WIN32  // backtrace and pretty_function not defined on windows
 #define error_vcl(MSG)  {vcl::call_error("",MSG,__FILE__,__func__,__LINE__,"No backtrace debug on Windows\n"); }
 #else
-#define error_vcl(MSG)  {vcl::call_error("",MSG,__FILE__,__PRETTY_FUNCTION__,__LINE__,"No backtrace on your system"); }
+#define error_vcl(MSG)  {vcl::call_error("",MSG,__FILE__,__PRETTY_FUNCTION__,__LINE__,vcl::backtrace()); }
 #endif
 
 

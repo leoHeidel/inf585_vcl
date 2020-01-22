@@ -18,6 +18,11 @@ std::string to_string(std::string const& s)
     return s;
 }
 
+std::string to_string(char const* s)
+{
+    return std::string(s);
+}
+
 bool is_equal(std::string const& a, std::string const& b)
 {
     return a==b;

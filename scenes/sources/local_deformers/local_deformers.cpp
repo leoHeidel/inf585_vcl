@@ -146,7 +146,7 @@ void scene_model::mouse_move(scene_structure& scene, GLFWwindow* window)
                 const float distance = norm(info.intersection-r.p); // get the closest intersection
 
                 if( picking.selected==false || distance<distance_min ) {
-                    assert( int(shape.normal.size())>=k );
+                    assert_vcl_no_msg( int(shape.normal.size())>=k );
                     const vec3& n = shape.normal[k];
                     picking = {true, k, cursor, p, n};  // Store current picking data information
                     distance_min = distance;
@@ -266,7 +266,7 @@ void scene_model::initialize_sphere()
 void scene_model::initialize_cube()
 {
     const int N = 70;
-    shape = mesh_primitive_parallelepiped_grid(N, N, {-0.5,-0.5,-0.5}, {1,0,0}, {0,1,0}, {0,0,1});
+    shape = mesh_primitive_bar_grid(N, N, N, {-0.5,-0.5,-0.5}, {1,0,0}, {0,1,0}, {0,0,1});
     initialize_visual_mesh(shaders["mesh"]);
 }
 

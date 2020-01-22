@@ -12,3 +12,4 @@
 #include "scenes/sources/local_deformers/local_deformers.hpp"
 #include "scenes/sources/particles_trajectory/bouncing_spheres/bouncing_spheres.hpp"
 #include "scenes/sources/particles_trajectory/sprites/sprites.hpp"
+#include "scenes/sources/skinning/skinning.hpp"
