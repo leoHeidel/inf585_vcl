@@ -23,6 +23,7 @@ struct buffer2D
     buffer2D(size_t2 const& size);
     buffer2D(size_t size_1, size_t size_2);
 
+
     void clear();
     size_t size() const;
     void resize(size_t size); // Create a square buffer2D of dimension NxN
@@ -77,6 +78,8 @@ template <typename T> buffer2D<T>  operator/(buffer2D<T> const& a, buffer2D<T> c
 template <typename T> buffer2D<T>  operator/(buffer2D<T> const& a, float b);
 template <typename T> buffer2D<T>  operator/(float a, buffer2D<T> const& b);
 
+template <typename T> buffer2D<T> buffer2D_from_vector(buffer<T> const& arg, size_t size_1, size_t size_2);
+
 }
 
 
@@ -113,6 +116,8 @@ template <typename T>
 buffer2D<T>::buffer2D(size_t size_1, size_t size_2)
     :dimension({size_1,size_2}),data(size_1*size_2)
 {}
+
+
 
 template <typename T>
 size_t buffer2D<T>::size() const
@@ -388,6 +393,16 @@ template <typename T> buffer2D<T>  operator/(float a, buffer2D<T> const& b)
     return res;
 }
 
+template <typename T>
+buffer2D<T> buffer2D_from_vector(buffer<T> const& arg, size_t size_1, size_t size_2)
+{
+    assert_vcl(arg.size()==size_1*size_2, "Incoherent size to generate buffer2D");
+
+    buffer2D<T> b(size_1, size_2);
+    b.data = arg;
+
+    return b;
+}
 
 
 }

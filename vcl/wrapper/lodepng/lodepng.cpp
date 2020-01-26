@@ -48,7 +48,7 @@ void image_save_png(const std::string& filename, const image_raw& im)
         exit(1);
     }
 
-    std::vector<unsigned char> output;
+    //std::vector<unsigned char> output;
     unsigned error = lodepng::encode(filename, im.data, im.width, im.height, lodepng_color_type);
     if ( error )
     {
@@ -56,8 +56,7 @@ void image_save_png(const std::string& filename, const image_raw& im)
         std::cerr<<"Decoder error " << error << ": " << lodepng_error_text(error) << std::endl;
         exit(1);
     }
-    else
-        lodepng::save_file(output, filename);
+
 
 }
 
