@@ -16,3 +16,4 @@
 // #define SCENE_SKINNING
 // #define SCENE_SPH
 // #define SCENE_SPHERE_COLLISION
+// #define SCENE_STABLE_FLUID
