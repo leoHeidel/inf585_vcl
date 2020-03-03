@@ -14,12 +14,8 @@ void scene_model::initialize_sph()
     // Influence distance of a particle (size of the kernel)
     const float h = 0.1f;
 
-
     // Rest density (consider 1000 Kg/m^3)
     const float rho0 = 1000.0f;
-
-    // Stiffness (consider ~2000 - used in tait equation)
-    const float stiffness = 2000.0f;
 
     // Viscosity parameter
     const float nu = 2.0f;
@@ -75,14 +71,12 @@ void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_struct
     borders.uniform.color = {0,0,0};
     borders.shader = shaders["curve"];
 
-
     initialize_sph();
     sphere.uniform.transform.scaling = sph_param.h/5.0f;
 
     gui_param.display_field = true;
     gui_param.display_particles = true;
     gui_param.save_field = false;
-
 }
 
 
@@ -90,17 +84,14 @@ void scene_model::display(std::map<std::string,GLuint>& shaders, scene_structure
 {
     draw(borders, scene.camera);
 
-    // Display particles
-    if(gui_param.display_particles)
-    {
-        const size_t N = particles.size();
-        for(size_t k=0; k<N; ++k) {
-            sphere.uniform.transform.translation = particles[k].p;
-            draw(sphere, scene.camera);
-        }
+    const size_t N = particles.size();
+    for(size_t k=0; k<N; ++k) {
+        sphere.uniform.transform.translation = particles[k].p;
+        draw(sphere, scene.camera);
+        std::cout << particles[k].p << std::endl;
+
     }
 }
-
 
 
 void scene_model::set_gui()
