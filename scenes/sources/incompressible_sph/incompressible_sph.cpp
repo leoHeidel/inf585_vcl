@@ -57,7 +57,72 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
     // Force constant time step
     float h = dt<=1e-6f? 0.0f : timer.scale*0.0003f;
 
+    for(int i=0; i < particles.size(); ++i){
+      apply_force(i);
+      predict_position(i);
+    }
+    find_neighbors();
+    while(int iter=0; iter<solverIterations; ++iter){
+      compute_constraints();
+      for(int i=0; i < particles.size(); ++i){
+        compute_dP(i);
+        solve_collision(i);
+      }
+      add_position_correction();
+    }
+    for(int i=0; i < particles.size(); ++i){
+      update_velocity(i);
+      apply_vorticity(i);
+      apply_viscosity(i);
+      update_position(i);
+    }
+
+
     display(shaders, scene, gui);
+}
+
+void scene_model::apply_force(size_t i){
+
+}
+
+void scene_model::predict_position(size_t i){
+
+}
+
+void scene_model::find_neighbors(){
+
+}
+
+void scene_model::compute_constraints(){
+
+}
+
+void scene_model::compute_dP(size_t i){
+
+}
+
+void scene_model::solve_collision(size_t i){
+
+}
+
+void scene_model::add_position_correction(){
+
+}
+
+void scene_model::update_velocity(size_t i){
+
+}
+
+void scene_model::apply_vorticity(size_t i){
+
+}
+
+void scene_model::apply_viscosity(size_t i){
+
+}
+
+void scene_model::update_position(size_t i){
+
 }
 
 void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_structure& , gui_structure& gui)
