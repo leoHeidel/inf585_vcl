@@ -2,6 +2,7 @@
 #include "incompressible_sph.hpp"
 
 #include <random>
+#include <unordered_map>
 
 #ifdef INCOMPRESSIBLE_SPH
 using namespace vcl;
@@ -24,21 +25,26 @@ void scene_model::initialize_sph()
     const float m = rho0*h*h;
 
     // Initial particle spacing (relative to h)
-    const float c = 0.95f;
+    const float c = 0.5f;
 
 
     // Fill a square with particles
     const float epsilon = 1e-3f;
-    for(float x=h; x<1.0f-h; x=x+c*h)
+    float dist = 4.5*h*c;
+    for(float x=-dist; x<=dist+h/10; x+=c*h)
     {
-        for(float y=-1.0f+h; y<0.0f-h; y=y+c*h)
+        for(float z=-dist; z<=dist+h/10; z+=c*h)
         {
-            particle_element particle;
-            particle.p = {x+epsilon*rand_interval(),y,0}; // a zero value in z position will lead to a 2D simulation
-            particles.push_back(particle);
+            for (float y=2*h-1; y<2*h+2*dist+h/10-1; y+=c*h)
+            {
+                particle_element particle;
+                particle.p = {x,y,z}; // a zero value in z position will lead to a 2D simulation
+                particles.push_back(particle);
+            }
         }
     }
 
+    sph_param.h    = h;
     sph_param.rho0 = rho0;
     sph_param.m    = m;
 }
@@ -75,6 +81,8 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
       apply_viscosity(i);
       update_position(i);
     }
+
+
     display(shaders, scene, gui);
 }
 
@@ -155,7 +163,6 @@ void scene_model::display(std::map<std::string,GLuint>& shaders, scene_structure
         sphere.uniform.transform.translation = particles[k].p;
         draw(sphere, scene.camera);
         std::cout << particles[k].p << std::endl;
-
     }
 }
 
