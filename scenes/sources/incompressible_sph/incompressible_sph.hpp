@@ -12,7 +12,7 @@ struct particle_element
 
     float rho;
 
-    particle_element() : p{0,0,0},v{0,0,0},a{0,0,0},rho(0),pression(0) {}
+    particle_element() : p{0,0,0},v{0,0,0},rho(0) {}
 };
 
 // SPH simulation parameters
@@ -51,22 +51,14 @@ struct scene_model : scene_base
     std::vector<particle_element> particles;
     sph_parameters sph_param;
 
-    float evaluate_display_field(const vcl::vec3& p);
-
-    void initialize_field_image();
     void set_gui();
 
     gui_parameters gui_param;
-    field_display field_image;
     vcl::mesh_drawable sphere;
     vcl::segments_drawable borders;
 
     vcl::timer_event timer;
 };
-
-
-
-
 
 
 #endif
