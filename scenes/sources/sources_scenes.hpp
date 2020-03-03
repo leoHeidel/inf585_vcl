@@ -18,3 +18,4 @@
 #include "scenes/sources/sph/sph.hpp"
 #include "scenes/sources/sphere_collision/sphere_collision.hpp"
 #include "scenes/sources/stable_fluid/stable_fluid.hpp"
+#include "scenes/sources/incompressible_sph/incompressible_sph.hpp"
