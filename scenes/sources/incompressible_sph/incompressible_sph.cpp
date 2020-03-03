@@ -62,8 +62,8 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
     size_t solverIterations = 6;
 
     for(size_t i=0; i < particles.size(); ++i){
-      apply_force(i, dt);
-      predict_position(i);
+      particles[i].v += dt * vcl::vec3(0.f, -9.8f, 0.f);
+      particles[i].q = particles[i].p + dt * particles[i].v;
     }
     find_neighbors();
     size_t k=0;
@@ -107,14 +107,6 @@ vcl::vec3 scene_model::gradW(const vcl::vec3 & p){
     }else{
         return vec3(0.f,0.f,0.f);
     }
-}
-
-void scene_model::apply_force(size_t i, float dt){
-
-}
-
-void scene_model::predict_position(size_t i){
-
 }
 
 void scene_model::find_neighbors(){
@@ -169,7 +161,7 @@ void scene_model::apply_viscosity(size_t i){
 }
 
 void scene_model::update_position(size_t i){
-
+  particles[i].p = particles[i].q;
 }
 
 void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_structure& , gui_structure& gui)

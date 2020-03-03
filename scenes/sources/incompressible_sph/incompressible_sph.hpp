@@ -63,8 +63,6 @@ struct scene_model : scene_base
     float W(const vcl::vec3 & p);
     vcl::vec3 gradW(const vcl::vec3 & p);
 
-    void apply_force(size_t i, float dt);
-    void predict_position(size_t i);
     void find_neighbors();
     void compute_constraints();
     void compute_dP(size_t i);
