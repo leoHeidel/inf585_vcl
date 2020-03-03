@@ -56,28 +56,29 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
 
     // Force constant time step
     float h = dt<=1e-6f? 0.0f : timer.scale*0.0003f;
+    size_t solverIterations = 6;
 
-    for(int i=0; i < particles.size(); ++i){
+    for(size_t i=0; i < particles.size(); ++i){
       apply_force(i);
       predict_position(i);
     }
     find_neighbors();
-    while(int iter=0; iter<solverIterations; ++iter){
+    size_t k=0;
+    while(k<solverIterations){
       compute_constraints();
-      for(int i=0; i < particles.size(); ++i){
+      for(size_t i=0; i < particles.size(); ++i){
         compute_dP(i);
         solve_collision(i);
       }
       add_position_correction();
+      ++k;
     }
-    for(int i=0; i < particles.size(); ++i){
+    for(size_t i=0; i < particles.size(); ++i){
       update_velocity(i);
       apply_vorticity(i);
       apply_viscosity(i);
       update_position(i);
     }
-
-
     display(shaders, scene, gui);
 }
 

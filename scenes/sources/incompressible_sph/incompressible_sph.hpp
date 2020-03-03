@@ -11,11 +11,11 @@ struct particle_element
     vcl::vec3 v; // Speed
     vcl::vec3 dp; // Position correction
     float lambda; // Constraint
-    std::vector<int> neighbors; // Neighbor indices
+    std::vector<size_t> neighbors; // Neighbor indices
 
     float rho;
 
-    particle_element() : p{0,0,0},v{0,0,0},rho(0), dp{0,0,0}, lambda(0.f) {}
+    particle_element() : p{0,0,0},v{0,0,0}, dp{0,0,0}, lambda(0.f), rho(0.f) {}
 };
 
 // SPH simulation parameters
@@ -71,8 +71,6 @@ struct scene_model : scene_base
     void apply_vorticity(size_t i);
     void apply_viscosity(size_t i);
     void update_position(size_t i);
-
-    int solverIterations;
 
     vcl::timer_event timer;
 };
