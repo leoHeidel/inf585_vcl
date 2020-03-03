@@ -86,6 +86,28 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
     display(shaders, scene, gui);
 }
 
+// SPH Smooth Kernel
+float scene_model::W(const vcl::vec3 & p){
+    if(norm(p)<=sph_param.h){
+        float C = 315./(64.*M_PI*pow(double(sph_param.h),3.));
+        float a = norm(p)/sph_param.h;
+        float b = 1-a*a;
+        return float(C*powf(b,3.));
+    }
+    return 0.f;
+}
+
+vcl::vec3 scene_model::gradW(const vcl::vec3 & p){
+    if(norm(p)<=sph_param.h){
+        float C = 315.f/(64.f*3.14159265f*powf(sph_param.h,3.f));
+        float a = norm(p)/sph_param.h;
+        float b = 1-a*a;
+        return -6.f/powf(sph_param.h,2.f)*C*powf(b,2.f)*p;
+    }else{
+        return vec3(0.f,0.f,0.f);
+    }
+}
+
 void scene_model::apply_force(size_t i){
 
 }
@@ -99,7 +121,19 @@ void scene_model::find_neighbors(){
 }
 
 void scene_model::compute_constraints(){
-
+  for(particle_element particle : particles){
+    particle.rho = 0.f;
+    vcl::vec3 ci = vec3(0.f, 0.f, 0.f);
+    float sum = 0.f;
+    for(size_t j : particle.neighbors){
+      particle.rho += W(particle.p - particles[j].p);
+      ci += gradW(particle.p - particles[j].p);
+      sum += norm(gradW(particle.p - particles[j].p)) * norm(gradW(particle.p - particles[j].p));
+    }
+    sum += norm(ci) * norm(ci);
+    particle.rho *= sph_param.m;
+    particle.lambda = - (particle.rho - sph_param.rho0) * sph_param.rho0 / sum;
+  }
 }
 
 void scene_model::compute_dP(size_t i){
