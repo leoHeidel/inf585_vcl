@@ -9,10 +9,13 @@ struct particle_element
 {
     vcl::vec3 p; // Position
     vcl::vec3 v; // Speed
+    vcl::vec3 dp; // Position correction
+    float lambda; // Constraint
+    std::vector<size_t> neighbors; // Neighbor indices
 
     float rho;
 
-    particle_element() : p{0,0,0},v{0,0,0},rho(0) {}
+    particle_element() : p{0,0,0},v{0,0,0}, dp{0,0,0}, lambda(0.f), rho(0.f) {}
 };
 
 // SPH simulation parameters
@@ -56,6 +59,18 @@ struct scene_model : scene_base
     gui_parameters gui_param;
     vcl::mesh_drawable sphere;
     vcl::segments_drawable borders;
+
+    void apply_force(size_t i);
+    void predict_position(size_t i);
+    void find_neighbors();
+    void compute_constraints();
+    void compute_dP(size_t i);
+    void solve_collision(size_t i);
+    void add_position_correction();
+    void update_velocity(size_t i);
+    void apply_vorticity(size_t i);
+    void apply_viscosity(size_t i);
+    void update_position(size_t i);
 
     vcl::timer_event timer;
 };
