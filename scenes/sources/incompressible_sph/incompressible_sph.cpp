@@ -3,6 +3,7 @@
 
 #include <random>
 #include <unordered_map>
+#include <cmath>
 
 #ifdef INCOMPRESSIBLE_SPH
 using namespace vcl;
@@ -61,7 +62,7 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
     size_t solverIterations = 6;
 
     for(size_t i=0; i < particles.size(); ++i){
-      apply_force(i);
+      apply_force(i, dt);
       predict_position(i);
     }
     find_neighbors();
@@ -76,7 +77,7 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
       ++k;
     }
     for(size_t i=0; i < particles.size(); ++i){
-      update_velocity(i);
+      update_velocity(i, dt);
       apply_vorticity(i);
       apply_viscosity(i);
       update_position(i);
@@ -108,7 +109,7 @@ vcl::vec3 scene_model::gradW(const vcl::vec3 & p){
     }
 }
 
-void scene_model::apply_force(size_t i){
+void scene_model::apply_force(size_t i, float dt){
 
 }
 
@@ -137,7 +138,11 @@ void scene_model::compute_constraints(){
 }
 
 void scene_model::compute_dP(size_t i){
-
+  for(size_t j : particles[i].neighbors){
+    float s = - 0.1f * pow(W(particles[i].p - particles[j].p)/W(vcl::vec3(0.2f*sph_param.h, 0.f, 0.f)), 4.f);
+    particles[i].dp += (particles[i].lambda + particles[j].lambda + s) * gradW(particles[i].p - particles[j].p);
+  }
+  particles[i].dp /= sph_param.rho0;
 }
 
 void scene_model::solve_collision(size_t i){
@@ -145,11 +150,14 @@ void scene_model::solve_collision(size_t i){
 }
 
 void scene_model::add_position_correction(){
-
+  for(particle_element particle : particles){
+    particle.q += particle.dp;
+    particle.dp = vcl::vec3(0.f, 0.f, 0.f);
+  }
 }
 
-void scene_model::update_velocity(size_t i){
-
+void scene_model::update_velocity(size_t i, float dt){
+  particles[i].v = (particles[i].q - particles[i].p)/dt;
 }
 
 void scene_model::apply_vorticity(size_t i){
