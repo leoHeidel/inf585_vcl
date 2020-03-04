@@ -35,3 +35,5 @@ Temporary Items
 build/
 
 imgui.ini
+.vscode/
+

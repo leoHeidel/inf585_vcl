@@ -116,8 +116,43 @@ void scene_model::predict_position(size_t i){
 
 }
 
-void scene_model::find_neighbors(){
+int hash_function(size_t x, size_t y, size_t z) {
+    return (x*4301314319 + y)*9205751543+z;
+}
 
+void scene_model::find_neighbors(){
+    std::unordered_map<size_t, std::vector<size_t>> hashmap(particles.size());
+    for (size_t i = 0; i < particles.size(); i++)
+    {
+        size_t hash = hash_function(particles[i].p.x/sph_param.h, particles[i].p.y/sph_param.h, particles[i].p.z/sph_param.h);
+        hashmap[hash].push_back(i);
+        particles[i].neighbors.clear();
+    }
+
+    for (size_t i = 0; i < particles.size(); i++)
+    {
+        size_t x = static_cast<size_t>(particles[i].p.x/sph_param.h);
+        size_t y = static_cast<size_t>(particles[i].p.y/sph_param.h);
+        size_t z = static_cast<size_t>(particles[i].p.z/sph_param.h);
+        for (int dx = -1; dx < 2; dx++)
+        {
+            for (int dy = -1; dy < 2; dy++)
+            {
+                for (int dz = -1; dz < 2; dz++)
+                {
+                    size_t hash = hash_function(x+dx,y+dy,z+dz);
+                    auto iter = hashmap.find(hash);
+                    if (iter != hashmap.end())
+                    {
+                        for (auto &&j : iter->second)
+                        {
+                            if (j != i) particles[i].neighbors.push_back(j);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 void scene_model::compute_constraints(){
