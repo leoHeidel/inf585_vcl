@@ -66,7 +66,7 @@ struct scene_model : scene_base
     void find_neighbors();
     void compute_constraints();
     void compute_dP(size_t i);
-    void solve_collision(size_t i);
+    void solve_collision(size_t i, float dt);
     void add_position_correction();
     void update_velocity(size_t i, float dt);
     void apply_vorticity(size_t i);
