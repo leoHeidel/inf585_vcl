@@ -19,7 +19,7 @@ void scene_model::initialize_sph()
     const float h = 0.1f;
 
     // Rest density (consider 1000 Kg/m^3)
-    const float rho0 = 1000.0f;
+    const float rho0 = 10.0f;
 
     // Viscosity parameter
     const float nu = 2.0f;
@@ -33,7 +33,7 @@ void scene_model::initialize_sph()
 
     // Fill a square with particles
     const float epsilon = 1e-3f;
-    float dist = 4.5*h*c;
+    float dist = 2.5*h*c;
     for(float x=-dist; x<=dist+h/10; x+=c*h)
     {
         for(float z=-dist; z<=dist+h/10; z+=c*h)
@@ -41,7 +41,7 @@ void scene_model::initialize_sph()
             for (float y=2*h-1; y<2*h+2*dist+h/10-1; y+=c*h)
             {
                 particle_element particle;
-                particle.p = {x,y,z}; // a zero value in z position will lead to a 2D simulation
+                particle.p = {x+epsilon*rand_interval(),y,z}; // a zero value in z position will lead to a 2D simulation
                 particles.push_back(particle);
             }
         }
@@ -73,7 +73,7 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
       compute_constraints();
       for(size_t i=0; i < particles.size(); ++i){
         compute_dP(i);
-        solve_collision(i);
+        solve_collision(i, dt);
       }
       add_position_correction();
       ++k;
@@ -158,7 +158,7 @@ void scene_model::find_neighbors(){
 }
 
 void scene_model::compute_constraints(){
-  for(particle_element particle : particles){
+  for(particle_element & particle : particles){
     particle.rho = 0.f;
     vcl::vec3 ci = vec3(0.f, 0.f, 0.f);
     float sum = 0.f;
@@ -192,26 +192,48 @@ float sign(float x){
    return (x>=0.f) ? 1.f : -1.f;
 }
 
-void scene_model::solve_collision(size_t i){
+void scene_model::solve_collision(size_t i, float dt){
   vcl::vec3 d = particles[i].q + particles[i].dp;
-  //float ratioX, ratioY, ratioZ;
-  //if(distanceField(d) <= 0.f){
-    d.x = clamp(d.x, -1.f, 1.f);
-    d.y = clamp(d.y, -1.f, 1.f);
-    d.z = clamp(d.z, -1.f, 1.f);
-    //ratioX = (clamp(d.x, -1.f, 1.f) - particles[i].p.x)/(d.x - particles[i].p.x);
-    //ratioY = (clamp(d.y, -1.f, 1.f) - particles[i].p.y)/(d.y - particles[i].p.y);
-    //ratioZ = (clamp(d.z, -1.f, 1.f) - particles[i].p.z)/(d.z - particles[i].p.z);
-    std::cout<<"out of box " << d.y <<std::endl;
-    particles[i].dp =  - particles[i].q; // - particles[i].q;
-    //particles[i].q = vcl::vec3(0.f,0.f,0.f);
-    //particles[i].dp = vcl::vec3(0.f,0.f,0.f);d * fmin(ratioX, fmin(ratioY, ratioZ))
-    //particles[i].v = vcl::vec3(0.f,0.f,0.f);
-  //}
+  if(d.x < -1.f){
+      particles[i].v.x *= -1.f;
+      particles[i].dp = vcl::vec3(0.f,0.f,0.f);
+      particles[i].q = particles[i].p +  particles[i].v * dt ;
+      particles[i].q.x = fmax(particles[i].q.x, -1.f);
+  }
+  if(d.x > 1.f){
+      particles[i].v.x *= -1.f;
+      particles[i].dp = vcl::vec3(0.f,0.f,0.f);
+      particles[i].q = particles[i].p +  particles[i].v * dt ;
+      particles[i].q.x = fmin(particles[i].q.x, 1.f);
+  }
+  if(d.y < -1.f){
+      particles[i].v.y *= -1.f;
+      particles[i].dp = vcl::vec3(0.f,0.f,0.f);
+      particles[i].q = particles[i].p +  particles[i].v * dt ;
+      particles[i].q.y = fmax(particles[i].q.y, -1.f);
+  }
+  if(d.y > 1.f){
+      particles[i].v.y *= -1.f;
+      particles[i].dp = vcl::vec3(0.f,0.f,0.f);
+      particles[i].q = particles[i].p +  particles[i].v * dt ;
+      particles[i].q.y = fmin(particles[i].q.y, 1.f);
+  }
+  if(d.z < -1.f){
+      particles[i].v.z *= -1.f;
+      particles[i].dp = vcl::vec3(0.f,0.f,0.f);
+      particles[i].q = particles[i].p +  particles[i].v * dt ;
+      particles[i].q.z = fmax(particles[i].q.z, -1.f);
+  }
+  if(d.z > 1.f){
+      particles[i].v.z *= -1.f;
+      particles[i].dp = vcl::vec3(0.f,0.f,0.f);
+      particles[i].q = particles[i].p +  particles[i].v * dt ;
+      particles[i].q.z = fmin(particles[i].q.z, 1.f);
+  }
 }
 
 void scene_model::add_position_correction(){
-  for(particle_element particle : particles){
+  for(particle_element & particle : particles){
     particle.q += particle.dp;
     particle.dp = vcl::vec3(0.f, 0.f, 0.f);
   }
@@ -225,7 +247,7 @@ void scene_model::apply_vorticity(size_t i){
     //A finir ! 
 
 
-    for (auto &&particle : particles)
+    for (auto & particle : particles)
     {
         vec3 w = {0,0,0};
         for (auto &&j : particle.neighbors)
