@@ -26,7 +26,7 @@ void scene_model::initialize_sph()
     const float m = rho0*h*h;
 
     // Initial particle spacing (relative to h)
-    const float c = 0.5f;
+    const float c = 0.9f;
 
 
     // Fill a square with particles
@@ -109,37 +109,44 @@ vcl::vec3 scene_model::gradW(const vcl::vec3 & p){
     }
 }
 
-int hash_function(size_t x, size_t y, size_t z) {
-    return (x*4301314319 + y)*9205751543+z;
+int hash_function(int x, int y, int z) {
+    //Hash function for three integers, used for the neightboor search
+    int int_x = static_cast <int> (std::floor(x));
+    int int_y = static_cast <int> (std::floor(y));
+    int int_z = static_cast <int> (std::floor(z));
+    return (int_x*11969 + int_y)*80737+int_z;
 }
 
 void scene_model::find_neighbors(){
-    std::unordered_map<size_t, std::vector<size_t>> hashmap(particles.size());
+    //Return all the neigbors within distance h. Might return neightbors up to distance 2*h. Use a hashtable to be in complexity close to linear. 
+    std::unordered_map<int, std::vector<size_t>> hashmap(particles.size());
     for (size_t i = 0; i < particles.size(); i++)
     {
-        size_t hash = hash_function(particles[i].p.x/sph_param.h, particles[i].p.y/sph_param.h, particles[i].p.z/sph_param.h);
+        int hash = hash_function(particles[i].p.x/sph_param.h, particles[i].p.y/sph_param.h, particles[i].p.z/sph_param.h);
         hashmap[hash].push_back(i);
         particles[i].neighbors.clear();
     }
 
     for (size_t i = 0; i < particles.size(); i++)
     {
-        size_t x = static_cast<size_t>(particles[i].p.x/sph_param.h);
-        size_t y = static_cast<size_t>(particles[i].p.y/sph_param.h);
-        size_t z = static_cast<size_t>(particles[i].p.z/sph_param.h);
+        float x = particles[i].p.x/sph_param.h;
+        float y = particles[i].p.y/sph_param.h;
+        float z = particles[i].p.z/sph_param.h;
+
         for (int dx = -1; dx < 2; dx++)
         {
             for (int dy = -1; dy < 2; dy++)
             {
                 for (int dz = -1; dz < 2; dz++)
                 {
-                    size_t hash = hash_function(x+dx,y+dy,z+dz);
+                    int hash = hash_function(x+dx,y+dy,z+dz);
                     auto iter = hashmap.find(hash);
                     if (iter != hashmap.end())
                     {
                         for (auto &&j : iter->second)
                         {
-                            if (j != i) particles[i].neighbors.push_back(j);
+                            float d = norm(particles[i].p - particles[j].p);
+                            if (j != i && d < sph_param.h) particles[i].neighbors.push_back(j);
                         }
                     }
                 }
@@ -187,8 +194,20 @@ void scene_model::update_velocity(size_t i, float dt){
   particles[i].v = (particles[i].q - particles[i].p)/dt;
 }
 
-void scene_model::apply_vorticity(size_t i){
+void scene_model::apply_vorticity(size_t i){    
+    //A finir ! 
 
+
+    for (auto &&particle : particles)
+    {
+        vec3 w = {0,0,0};
+        for (auto &&j : particle.neighbors)
+        {
+            vec3 v_ij = particles[j].v - particle.v;
+            vec3 dw = gradW(particle.p - particles[j].p);
+            w += cross(v_ij, dw);
+        }   
+    }
 }
 
 void scene_model::apply_viscosity(size_t i){
@@ -196,7 +215,7 @@ void scene_model::apply_viscosity(size_t i){
 }
 
 void scene_model::update_position(size_t i){
-  particles[i].p = particles[i].q;
+    particles[i].p = particles[i].q;
 }
 
 void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_structure& , gui_structure& gui)
@@ -231,7 +250,6 @@ void scene_model::display(std::map<std::string,GLuint>& shaders, scene_structure
     for(size_t k=0; k<N; ++k) {
         sphere.uniform.transform.translation = particles[k].p;
         draw(sphere, scene.camera);
-        std::cout << particles[k].p << std::endl;
     }
 }
 
