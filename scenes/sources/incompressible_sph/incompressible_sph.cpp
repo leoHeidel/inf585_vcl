@@ -147,12 +147,8 @@ void scene_model::find_neighbors(){
                     {
                         for (auto &&j : iter->second)
                         {
-<<<<<<< HEAD
                             float d = norm(particles[i].p - particles[j].p);
                             if (j != i && d < sph_param.h) particles[i].neighbors.push_back(j);
-=======
-                            //if (j != i) particles[i].neighbors.push_back(j);
->>>>>>> 8e57cdd5bd32f6542653c32a4ad28783e2a2ca2c
                         }
                     }
                 }
@@ -281,10 +277,6 @@ void scene_model::display(std::map<std::string,GLuint>& shaders, scene_structure
     for(size_t k=0; k<N; ++k) {
         sphere.uniform.transform.translation = particles[k].p;
         draw(sphere, scene.camera);
-<<<<<<< HEAD
-=======
-        //std::cout << particles[k].p << std::endl;
->>>>>>> 8e57cdd5bd32f6542653c32a4ad28783e2a2ca2c
     }
 }
 
