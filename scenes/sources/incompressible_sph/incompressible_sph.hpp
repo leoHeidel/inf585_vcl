@@ -15,7 +15,7 @@ struct particle_element
     std::vector<size_t> neighbors; // Neighbor indices
     float rho;
 
-    particle_element() : p{0,0,0},v{0,0,0}, dp{0,0,0}, lambda(0.f), rho(0.f) {}
+    particle_element() : p{0,0,0},v{0,0,0}, dp{0,0,0}, q{0,0,0}, lambda(0.f), rho(0.f) {}
 };
 
 // SPH simulation parameters
