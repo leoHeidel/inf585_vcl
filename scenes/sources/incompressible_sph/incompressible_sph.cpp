@@ -1,9 +1,11 @@
 
+
 #include "incompressible_sph.hpp"
 
 #include <random>
 #include <unordered_map>
 #include <cmath>
+#include <algorithm>
 
 #ifdef INCOMPRESSIBLE_SPH
 using namespace vcl;
@@ -62,7 +64,7 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
     size_t solverIterations = 6;
 
     for(size_t i=0; i < particles.size(); ++i){
-      particles[i].v += dt * vcl::vec3(0.f, -9.8f, 0.f);
+      particles[i].v += dt * vcl::vec3(0.f, -0.2f, 0.f);
       particles[i].q = particles[i].p + dt * particles[i].v;
     }
     find_neighbors();
@@ -145,8 +147,12 @@ void scene_model::find_neighbors(){
                     {
                         for (auto &&j : iter->second)
                         {
+<<<<<<< HEAD
                             float d = norm(particles[i].p - particles[j].p);
                             if (j != i && d < sph_param.h) particles[i].neighbors.push_back(j);
+=======
+                            //if (j != i) particles[i].neighbors.push_back(j);
+>>>>>>> 8e57cdd5bd32f6542653c32a4ad28783e2a2ca2c
                         }
                     }
                 }
@@ -179,8 +185,33 @@ void scene_model::compute_dP(size_t i){
   particles[i].dp /= sph_param.rho0;
 }
 
-void scene_model::solve_collision(size_t i){
+float distanceField(vcl::vec3 p){
+  float d = fmin(1.f - p.x, p.x + 1.f);
+  d = fmin(d, fmin(1.f - p.y, p.y + 1.f));
+  d = fmin(d, fmin(1.f - p.z, p.z + 1.f));
+  return d;
+}
 
+float sign(float x){
+   return (x>=0.f) ? 1.f : -1.f;
+}
+
+void scene_model::solve_collision(size_t i){
+  vcl::vec3 d = particles[i].q + particles[i].dp;
+  //float ratioX, ratioY, ratioZ;
+  //if(distanceField(d) <= 0.f){
+    d.x = clamp(d.x, -1.f, 1.f);
+    d.y = clamp(d.y, -1.f, 1.f);
+    d.z = clamp(d.z, -1.f, 1.f);
+    //ratioX = (clamp(d.x, -1.f, 1.f) - particles[i].p.x)/(d.x - particles[i].p.x);
+    //ratioY = (clamp(d.y, -1.f, 1.f) - particles[i].p.y)/(d.y - particles[i].p.y);
+    //ratioZ = (clamp(d.z, -1.f, 1.f) - particles[i].p.z)/(d.z - particles[i].p.z);
+    std::cout<<"out of box " << d.y <<std::endl;
+    particles[i].dp =  - particles[i].q; // - particles[i].q;
+    //particles[i].q = vcl::vec3(0.f,0.f,0.f);
+    //particles[i].dp = vcl::vec3(0.f,0.f,0.f);d * fmin(ratioX, fmin(ratioY, ratioZ))
+    //particles[i].v = vcl::vec3(0.f,0.f,0.f);
+  //}
 }
 
 void scene_model::add_position_correction(){
@@ -250,6 +281,10 @@ void scene_model::display(std::map<std::string,GLuint>& shaders, scene_structure
     for(size_t k=0; k<N; ++k) {
         sphere.uniform.transform.translation = particles[k].p;
         draw(sphere, scene.camera);
+<<<<<<< HEAD
+=======
+        //std::cout << particles[k].p << std::endl;
+>>>>>>> 8e57cdd5bd32f6542653c32a4ad28783e2a2ca2c
     }
 }
 
