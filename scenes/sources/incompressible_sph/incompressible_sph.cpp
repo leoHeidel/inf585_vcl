@@ -19,7 +19,7 @@ void scene_model::initialize_sph()
     const float h = 0.1f;
 
     // Rest density (consider 1000 Kg/m^3)
-    const float rho0 = 10.0f;
+    const float rho0 = 1000.0f;
 
     // Viscosity parameter
     const float nu = 2.0f;
@@ -28,16 +28,18 @@ void scene_model::initialize_sph()
     const float m = rho0*h*h;
 
     // Initial particle spacing (relative to h)
-    const float c = 0.9f;
+    const float c = 1.5f;
 
 
     // Fill a square with particles
     const float epsilon = 1e-3f;
+    // float dist = 0;
     float dist = 2.5*h*c;
     for(float x=-dist; x<=dist+h/10; x+=c*h)
     {
         for(float z=-dist; z<=dist+h/10; z+=c*h)
         {
+            // for (float y=-0.9; y<-0.5; y+=0.3)
             for (float y=2*h-1; y<2*h+2*dist+h/10-1; y+=c*h)
             {
                 particle_element particle;
@@ -50,6 +52,7 @@ void scene_model::initialize_sph()
     sph_param.h    = h;
     sph_param.rho0 = rho0;
     sph_param.m    = m;
+    sph_param.eps  = 1e-3;
 }
 
 
@@ -61,7 +64,7 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
 
     // Force constant time step
     float h = dt<=1e-6f? 0.0f : timer.scale*0.0003f;
-    size_t solverIterations = 6;
+    size_t solverIterations = 3;
 
     for(size_t i=0; i < particles.size(); ++i){
       particles[i].v += dt * vcl::vec3(0.f, -0.2f, 0.f);
@@ -69,14 +72,19 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
     }
     find_neighbors();
     size_t k=0;
+    if (sph_param.verbose) std::cout <<"solveur  : "<< std::endl;
+
     while(k<solverIterations){
       compute_constraints();
       for(size_t i=0; i < particles.size(); ++i){
         compute_dP(i);
+        if (sph_param.verbose && i==0) std::cout << "dp : " << particles[0].dp << " norm : " << norm(particles[0].dp) << std::endl;
         solve_collision(i, dt);
       }
+
       add_position_correction();
-        std::cout << particles[0].q << std::endl;
+
+      if (sph_param.verbose) std::cout << std::endl;
 
       ++k;
     }
@@ -89,15 +97,15 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
       update_position(i);
     }
 
-
     display(shaders, scene, gui);
 }
 
 // SPH Smooth Kernel
 float scene_model::W(const vcl::vec3 & p){
-    if(norm(p)<=sph_param.h){
-        float C = 315./(64.*M_PI*pow(double(sph_param.h),3.));
-        float a = norm(p)/sph_param.h;
+    float d = norm(p);
+    if(d<=sph_param.h){
+        float C = 315./(64.*M_PI*powf(sph_param.h,3.));
+        float a = d/sph_param.h;
         float b = 1-a*a;
         return float(C*powf(b,3.));
     }
@@ -105,23 +113,36 @@ float scene_model::W(const vcl::vec3 & p){
 }
 
 vcl::vec3 scene_model::gradW(const vcl::vec3 & p){
-    if(norm(p)<=sph_param.h){
-        float C = 315.f/(64.f*3.14159265f*powf(sph_param.h,3.f));
-        float a = norm(p)/sph_param.h;
+    float d = norm(p);
+    if(d<=sph_param.h){
+        float C = -6.f*315.f/(64.f*M_PI*powf(sph_param.h,5.f));
+        float a = d/sph_param.h;
         float b = 1-a*a;
-        return -6.f/powf(sph_param.h,2.f)*C*powf(b,2.f)*p;
+        return C*powf(b,2.f)*p;
     }else{
         return vec3(0.f,0.f,0.f);
     }
 }
 
-int hash_function(int x, int y, int z) {
+vcl::vec3 scene_model::gradW_spkiky(const vcl::vec3 & p){
+    float d = norm(p);
+    if(d<=sph_param.h){
+        float B = 45 / M_PI * powf(sph_param.h, -6.f);
+        float a = sph_param.h - d;
+        return -B* a*a *p/d;
+    }else{
+        return vec3(0.f,0.f,0.f);
+    }
+}
+
+int hash_function(float x, float y, float z) {
     //Hash function for three integers, used for the neightboor search
     int int_x = static_cast <int> (std::floor(x));
     int int_y = static_cast <int> (std::floor(y));
     int int_z = static_cast <int> (std::floor(z));
     return (int_x*11969 + int_y)*80737+int_z;
 }
+
 
 void scene_model::find_neighbors(){
     //Return all the neigbors within distance h. Might return neightbors up to distance 2*h. Use a hashtable to be in complexity close to linear. 
@@ -152,7 +173,9 @@ void scene_model::find_neighbors(){
                         for (auto &&j : iter->second)
                         {
                             float d = norm(particles[i].p - particles[j].p);
-                            if (j != i && d < sph_param.h) particles[i].neighbors.push_back(j);
+                            if (j != i && d < sph_param.h) {
+                                particles[i].neighbors.push_back(j);
+                          }
                         }
                     }
                 }
@@ -167,14 +190,21 @@ void scene_model::compute_constraints(){
     vcl::vec3 ci = vec3(0.f, 0.f, 0.f);
     float sum = 0.f;
     for(size_t j : particle.neighbors){
-      particle.rho += W(particle.p - particles[j].p);
-      ci += gradW(particle.p - particles[j].p);
-      sum += norm(gradW(particle.p - particles[j].p)) * norm(gradW(particle.p - particles[j].p));
+      particle.rho += W(particle.q - particles[j].q);
+      ci += gradW(particle.q - particles[j].q);
+      float grad_j_norm = norm(gradW(particle.q - particles[j].q));
+      sum += grad_j_norm*grad_j_norm;
+      if (sph_param.verbose) std::cout << "added to rho/m : " <<  W(particle.q - particles[j].q) << std::endl;
+
     }
     sum += norm(ci) * norm(ci);
     particle.rho *= sph_param.m;
-    particle.lambda = - (particle.rho - sph_param.rho0) * sph_param.rho0 / sum;
+    particle.lambda = - (particle.rho - sph_param.rho0) * sph_param.rho0 / (sum + sph_param.eps);
+    particle.lambda /= sph_param.m * sph_param.m;
   }
+  if (sph_param.verbose) std::cout << "rho : " << particles[0].rho << " rho0 : " << sph_param.rho0 << std::endl;
+  if (sph_param.verbose) std::cout << "m : " << sph_param.m << " max w : " << W({0.f,0.f,0.f}) << std::endl;
+  if (sph_param.verbose) std::cout << "lambda : " << particles[0].lambda << std::endl;
 }
 
 void scene_model::compute_dP(size_t i){
@@ -183,24 +213,17 @@ void scene_model::compute_dP(size_t i){
     particles[i].dp += (particles[i].lambda + particles[j].lambda + s) * gradW(particles[i].p - particles[j].p);
   }
   particles[i].dp /= sph_param.rho0;
-}
-
-float distanceField(vcl::vec3 p){
-  float d = fmin(1.f - p.x, p.x + 1.f);
-  d = fmin(d, fmin(1.f - p.y, p.y + 1.f));
-  d = fmin(d, fmin(1.f - p.z, p.z + 1.f));
-  return d;
-}
-
-float sign(float x){
-   return (x>=0.f) ? 1.f : -1.f;
+  float d = norm(particles[i].dp);
+  d = d < sph_param.h / 5 ? 1 : d / (sph_param.h / 5) ;
+  particles[i].dp /= d; 
 }
 
 void scene_model::solve_collision(size_t i, float dt){
   vcl::vec3 d = particles[i].q + particles[i].dp;
-    d.x = clamp(d.x, -1.f, 1.f);
-    d.y = clamp(d.y, -1.f, 1.f);
-    d.z = clamp(d.z, -1.f, 1.f);
+    float epsilon = 0.01f;
+    d.x = clamp(d.x, -1.f + epsilon*rand_interval(), 1.f - epsilon*rand_interval());
+    d.y = clamp(d.y, -1.f + epsilon*rand_interval(), 1.f - epsilon*rand_interval());
+    d.z = clamp(d.z, -1.f + epsilon*rand_interval(), 1.f - epsilon*rand_interval());
     particles[i].dp =  d - particles[i].q;
 }
 

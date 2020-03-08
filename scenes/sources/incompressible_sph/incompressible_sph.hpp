@@ -24,6 +24,8 @@ struct sph_parameters
     float h;     // influence distance of a particle
     float rho0;  // rest density
     float m;     // total mass of a particle
+    float eps; //small number for float division
+    bool verbose = false;
 };
 
 // Image used to display the water appearance
@@ -62,6 +64,7 @@ struct scene_model : scene_base
 
     float W(const vcl::vec3 & p);
     vcl::vec3 gradW(const vcl::vec3 & p);
+    vcl::vec3 gradW_spkiky(const vcl::vec3 & p);
 
     void find_neighbors();
     void compute_constraints();
