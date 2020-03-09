@@ -16,13 +16,13 @@ int counter_image = 0;
 void scene_model::initialize_sph()
 {
     // Influence distance of a particle (size of the kernel)
-    const float h = 0.1f;
+    const float h = 0.07f;
 
     // Rest density (consider 1000 Kg/m^3)
     const float rho0 = 1000.0f;
 
     // Total mass of a particle (consider rho0 h^2)
-    const float m = rho0*h*h*h*10;
+    const float m = rho0*h*h*h;
 
     // Initial particle spacing (relative to h)
     const float c = 0.88f;
@@ -31,7 +31,7 @@ void scene_model::initialize_sph()
     // Fill a square with particles
     const float epsilon = 1e-3f;
     // float dist = 0;
-    float dist = 5.5*h*c;
+    float dist = 6.5*h*c;
     for(float x=-dist; x<=dist+h/10; x+=c*h)
     {
         for(float z=-dist; z<=dist+h/10; z+=c*h)
