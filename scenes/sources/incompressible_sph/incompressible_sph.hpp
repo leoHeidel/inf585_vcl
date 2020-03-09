@@ -25,7 +25,10 @@ struct sph_parameters
     float rho0;  // rest density
     float m;     // total mass of a particle
     float eps; //small number for float division
-    bool verbose = false;
+    float c = 0.1; //for viscuosity
+
+    bool verbose = true;
+    int verbose_index = 0;
 };
 
 // Image used to display the water appearance
@@ -73,7 +76,7 @@ struct scene_model : scene_base
     void add_position_correction();
     void update_velocity(size_t i, float dt);
     void apply_vorticity(size_t i);
-    void apply_viscosity(size_t i);
+    void apply_viscosity();
     void update_position(size_t i);
 
     vcl::timer_event timer;
