@@ -9,7 +9,6 @@ if(UNIX)
 add_definitions(-g -O2 -std=c++11 -Wall)
     set(CMAKE_CXX_COMPILER g++)
     find_package(glfw3 REQUIRED) #Expect glfw3 to be installed on your system
-    find_package(OpenCL REQUIRED)
 endif()
 
 # In Window set directory to precompiled version of glfw3
@@ -17,6 +16,10 @@ if(WIN32)
     set(GLFW_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/lib_windows/glfw3_win/include")
     include_directories(${GLFW_INCLUDE_DIRS})
     set(GLFW_LIBRARIES "${CMAKE_CURRENT_SOURCE_DIR}/lib_windows/glfw3_win/lib/glfw3.lib")
+endif()
+
+if(APPLE)
+    find_package(OpenCL REQUIRED)
 endif()
 
 include_directories(".")
@@ -36,6 +39,10 @@ add_executable(pgm ${source_files})
 
 if(UNIX)
 target_link_libraries(pgm glfw dl -static-libstdc++ "-framework OpenCL")
+endif()
+
+if(APPLE)
+    target_link_libraries(pgm "-framework OpenCL")
 endif()
 
 if(WIN32)

@@ -25,26 +25,24 @@ void scene_model::initialize_sph()
     const float m = rho0*h*h*h;
 
     // Initial particle spacing (relative to h)
-    const float c = 0.88f;
+    const float c = 1.2f;
 
     // Fill a square with particles
     const float epsilon = 1e-3f;
     // float dist = 0;
     float dist = 5.5*h*c;
-    for(float x=-dist; x<=dist+h/10; x+=c*h)
-    {
-        for(float z=-dist; z<=dist+h/10; z+=c*h)
-        {
-            // for (float y=-0.9; y<-0.5; y+=0.3)
-            for (float y=2*h-1; y<2*h+2*dist+h/10-1; y+=c*h)
-            {
-                particle_element particle;
-                particle.p = {x+epsilon*rand_interval(),y+epsilon*rand_interval(),z+epsilon*rand_interval()}; // a zero value in z position will lead to a 2D simulation
-                particles.push_back(particle);
-            }
-        }
-    }
+    const int N_PARTICLES = 2048;
 
+    std::default_random_engine generator;
+    std::normal_distribution<float> normal(0,1);
+    for (size_t i = 0; i < N_PARTICLES; i++)
+    {
+       vec3 v = {normal(generator), normal(generator), normal(generator)};
+       particle_element particle;
+       particle.p = 0.3*v;
+       particles.push_back(particle);
+    }
+    
     sph_param.h    = h;
     sph_param.rho0 = rho0;
     sph_param.m    = m;
@@ -187,6 +185,19 @@ void scene_model::find_neighbors(){
             }
         }
     }
+
+    float avg = 0;
+    int count = 0;
+    int max = 0;
+    for (auto &particle : particles)
+    {   
+        int n = particle.neighbors.size();
+        count++;
+        max = max < n ? n : max;
+        avg += n;
+    }
+    std::cout << "max " << max << " avg " << (avg / count) << " count " << count << std::endl;
+
     // if (particles[0].neighbors.size()) sph_param.verbose = true;
 }
 
@@ -227,7 +238,6 @@ void scene_model::compute_dP(size_t i){
   if (sph_param.verbose && i == sph_param.verbose_index) std::cout << "norm dp : " << d << std::endl;
   d = d < sph_param.h * coef ? 1 : d / (sph_param.h * coef) ;
   particles[i].dp /= d; 
-
 }
 
 void scene_model::solve_collision(size_t i, float dt){
