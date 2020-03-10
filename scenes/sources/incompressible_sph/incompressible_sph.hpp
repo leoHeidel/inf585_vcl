@@ -1,6 +1,7 @@
 #pragma once
 
 #include "scenes/base/base.hpp"
+#include "opencl_helper.hpp"
 
 #ifdef INCOMPRESSIBLE_SPH
 
@@ -25,9 +26,9 @@ struct sph_parameters
     float rho0;  // rest density
     float m;     // total mass of a particle
     float eps; //small number for float division
-    float c = 0.1; //for viscuosity
+    float c = 0.05; //for viscuosity
 
-    bool verbose = true;
+    bool verbose = false;
     int verbose_index = 0;
 };
 
@@ -50,7 +51,7 @@ struct gui_parameters
 
 struct scene_model : scene_base
 {
-
+    OCLHelper oclHelper;
     void initialize_sph();
     void setup_data(std::map<std::string,GLuint>& shaders, scene_structure& scene, gui_structure& gui);
     void frame_draw(std::map<std::string,GLuint>& shaders, scene_structure& scene, gui_structure& gui);

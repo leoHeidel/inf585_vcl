@@ -16,7 +16,7 @@ int counter_image = 0;
 void scene_model::initialize_sph()
 {
     // Influence distance of a particle (size of the kernel)
-    const float h = 0.07f;
+    const float h = 0.1f;
 
     // Rest density (consider 1000 Kg/m^3)
     const float rho0 = 1000.0f;
@@ -27,11 +27,10 @@ void scene_model::initialize_sph()
     // Initial particle spacing (relative to h)
     const float c = 0.88f;
 
-
     // Fill a square with particles
     const float epsilon = 1e-3f;
     // float dist = 0;
-    float dist = 6.5*h*c;
+    float dist = 5.5*h*c;
     for(float x=-dist; x<=dist+h/10; x+=c*h)
     {
         for(float z=-dist; z<=dist+h/10; z+=c*h)
@@ -50,9 +49,10 @@ void scene_model::initialize_sph()
     sph_param.rho0 = rho0;
     sph_param.m    = m;
     sph_param.eps  = epsilon;
+
+    oclHelper.init_context();
+    oclHelper.test_context();
 }
-
-
 
 void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_structure& scene, gui_structure& gui)
 {
@@ -64,7 +64,7 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
     size_t solverIterations = 3;
 
     for(size_t i=0; i < particles.size(); ++i){
-      particles[i].v += dt * vcl::vec3(0.f, -sph_param.h * 10, 0.f);
+      particles[i].v += dt * vcl::vec3(0.f, -sph_param.h * 50, 0.f);
       particles[i].q = particles[i].p + dt * particles[i].v;
     }
     find_neighbors();
@@ -187,7 +187,7 @@ void scene_model::find_neighbors(){
             }
         }
     }
-    if (particles[0].neighbors.size()) sph_param.verbose = true;
+    // if (particles[0].neighbors.size()) sph_param.verbose = true;
 }
 
 
