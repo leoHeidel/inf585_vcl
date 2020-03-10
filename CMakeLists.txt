@@ -38,8 +38,11 @@ add_executable(pgm ${source_files})
 
 
 if(UNIX)
-target_link_libraries(pgm glfw dl -static-libstdc++ "-framework OpenCL")
+    target_link_libraries(pgm glfw dl -static-libstdc++)
 endif()
+
+add_definitions(-I/usr/local/cuda-10.1/targets/x86_64-linux/include/)
+target_link_libraries(pgm -lOpenCL)
 
 if(APPLE)
     target_link_libraries(pgm "-framework OpenCL")
