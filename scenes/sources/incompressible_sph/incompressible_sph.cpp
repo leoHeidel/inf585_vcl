@@ -21,7 +21,7 @@ void scene_model::initialize_sph()
     // Rest density (consider 1000 Kg/m^3)
     const float rho0 = 1000.0f;
 
-    // Total mass of a particle (consider rho0 h^2)
+    // Total mass of a particle (consider rho0 h^3)
     const float m = rho0*h*h*h;
 
     // Initial particle spacing (relative to h)
@@ -41,7 +41,7 @@ void scene_model::initialize_sph()
        particle.p = 0.03*v;
        particles.push_back(particle);
     }
-    
+
     sph_param.h    = h;
     sph_param.rho0 = rho0;
     sph_param.m    = m;
@@ -98,7 +98,7 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
 
       for(size_t i=0; i < particles.size(); ++i){
         compute_dP(i);
-        if (sph_param.verbose && i==sph_param.verbose_index) 
+        if (sph_param.verbose && i==sph_param.verbose_index)
             std::cout << "dp : " << particles[sph_param.verbose_index].dp << " norm : " << norm(particles[sph_param.verbose_index].dp) << std::endl;
         solve_collision(i, dt);
       }
@@ -195,7 +195,7 @@ int hash_function(float x, float y, float z) {
 
 
 void scene_model::find_neighbors(){
-    //Return all the neigbors within distance h. Might return neightbors up to distance 2*h. Use a hashtable to be in complexity close to linear. 
+    //Return all the neigbors within distance h. Might return neightbors up to distance 2*h. Use a hashtable to be in complexity close to linear.
     std::unordered_map<int, std::vector<size_t>> hashmap(particles.size());
 
     sph_param.verbose = false;
@@ -240,7 +240,7 @@ void scene_model::find_neighbors(){
     int count = 0;
     int max = 0;
     for (auto &particle : particles)
-    {   
+    {
         int n = particle.neighbors.size();
         count++;
         max = max < n ? n : max;
@@ -281,7 +281,7 @@ void scene_model::compute_dP(size_t i){
     particles[i].dp += (particles[i].lambda + particles[j].lambda + s) * gradW(particles[i].q - particles[j].q); // homogeneous h^-2;
   }
 
-  
+
   //   particles[i].dp /= sph_param.rho0;
   particles[i].dp *= sph_param.m / sph_param.rho0;
   float coef = 0.1;
@@ -289,7 +289,7 @@ void scene_model::compute_dP(size_t i){
   float d = norm(particles[i].dp);
   if (sph_param.verbose && i == sph_param.verbose_index) std::cout << "norm dp : " << d << std::endl;
   d = d < sph_param.h * coef ? 1 : d / (sph_param.h * coef) ;
-  particles[i].dp /= d; 
+  particles[i].dp /= d;
 }
 
 void scene_model::solve_collision(size_t i, float dt){
@@ -312,8 +312,8 @@ void scene_model::update_velocity(size_t i, float dt){
   particles[i].v = (particles[i].q - particles[i].p)/dt;
 }
 
-void scene_model::apply_vorticity(size_t i){    
-    //A finir ! 
+void scene_model::apply_vorticity(size_t i){
+    //A finir !
     for (auto &particle : particles)
     {
         vec3 w = {0,0,0};
@@ -322,7 +322,7 @@ void scene_model::apply_vorticity(size_t i){
             vec3 v_ij = particles[j].v - particle.v;
             vec3 dw = gradW(particle.p - particles[j].p);
             w += cross(v_ij, dw);
-        }   
+        }
     }
 }
 
@@ -344,7 +344,7 @@ void scene_model::apply_viscosity(){
         if (sph_param.verbose && i == sph_param.verbose_index) std::cout <<"------------ alpha  : " << alpha << std::endl;
         if (alpha > 1) {
             std::cout << "Error in viscuosity alpha too big : " << alpha << std::endl;
-            alpha = 1; 
+            alpha = 1;
         }
         particles[i].v += (1-alpha) * old_v[i];
     }
