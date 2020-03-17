@@ -30,8 +30,7 @@ void scene_model::initialize_sph()
     // Fill a square with particles
     const float epsilon = 1e-3f;
     // float dist = 0;
-    float dist = 5.5*h*c;
-    const int N_PARTICLES = 2048;
+    const int N_PARTICLES = 16;
 
     std::default_random_engine generator;
     std::normal_distribution<float> normal(0,1);
@@ -39,7 +38,7 @@ void scene_model::initialize_sph()
     {
        vec3 v = {normal(generator), normal(generator), normal(generator)};
        particle_element particle;
-       particle.p = 0.3*v;
+       particle.p = 0.03*v;
        particles.push_back(particle);
     }
     
@@ -49,28 +48,54 @@ void scene_model::initialize_sph()
     sph_param.eps  = epsilon;
 
     oclHelper.init_context();
-    oclHelper.test_context();
+    // oclHelper.test_context();
 }
 
 void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_structure& scene, gui_structure& gui)
 {
-    const float dt = timer.update();
+    const float dt = 0.02f;
+    // const float dt = timer.update();
     set_gui();
 
     // Force constant time step
-    float h = dt<=1e-6f? 0.0f : timer.scale*0.0003f;
     size_t solverIterations = 3;
 
     for(size_t i=0; i < particles.size(); ++i){
       particles[i].v += dt * vcl::vec3(0.f, -sph_param.h * 50, 0.f);
       particles[i].q = particles[i].p + dt * particles[i].v;
     }
+    std::cout << "befor solver CPU";
+    for (size_t i = 0; i < 3; i++)
+    {
+    for (size_t j = 0; j < 3; j++)
+    {
+        std::cout << particles[i].q[j] << " ";
+    }
+    std::cout << "   ";
+    }
+    std::cout << std::endl;
+
+
+    std::vector<vec3> v;
+    for (auto &part : particles)
+    {
+        v.push_back(part.v);
+    }
+    std::vector<vec3> positions;
+    for (auto &part : particles)
+    {
+        positions.push_back(part.p);
+    }
+    oclHelper.befor_solver(positions, v);
     find_neighbors();
+
+    oclHelper.make_neighboors();
     size_t k=0;
     if (sph_param.verbose) std::cout <<"solveur  : "<< std::endl;
 
     while(k<solverIterations){
       compute_constraints();
+
       for(size_t i=0; i < particles.size(); ++i){
         compute_dP(i);
         if (sph_param.verbose && i==sph_param.verbose_index) 
@@ -80,16 +105,41 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
 
       add_position_correction();
 
+      oclHelper.solver_step();
+      std::cout << "q CPU";
+        for (size_t i = 0; i < 3; i++)
+        {
+        for (size_t j = 0; j < 3; j++)
+        {
+            std::cout << particles[i].q[j] << " ";
+        }
+        std::cout << "   ";
+        }
+        std::cout << std::endl;
+
       if (sph_param.verbose) std::cout << std::endl;
 
       ++k;
     }
 
+    oclHelper.update_speed();
+
+    std::cout << "v CPU";
+    for (size_t i = 0; i < 3; i++)
+    {
+    for (size_t j = 0; j < 3; j++)
+    {
+        std::cout << particles[i].v[j] << " ";
+    }
+    std::cout << "   ";
+    }
+    std::cout << std::endl;
+    std::cout << std::endl;
 
     for(size_t i=0; i < particles.size(); ++i){
       update_velocity(i, dt);
       update_position(i);
-      //apply_vorticity(i);
+    //   apply_vorticity(i);
     }
 
     apply_viscosity();
@@ -196,7 +246,7 @@ void scene_model::find_neighbors(){
         max = max < n ? n : max;
         avg += n;
     }
-    std::cout << "max " << max << " avg " << (avg / count) << " count " << count << std::endl;
+    // std::cout << "max " << max << " avg " << (avg / count) << " count " << count << std::endl;
 
     // if (particles[0].neighbors.size()) sph_param.verbose = true;
 }
@@ -230,6 +280,8 @@ void scene_model::compute_dP(size_t i){
     float s = 0; //- 0.1f * pow(W(particles[i].q - particles[j].q)/W(vcl::vec3(0.2f*sph_param.h, 0.f, 0.f)), 4.f); // homogeneous h^-3
     particles[i].dp += (particles[i].lambda + particles[j].lambda + s) * gradW(particles[i].q - particles[j].q); // homogeneous h^-2;
   }
+
+  
   //   particles[i].dp /= sph_param.rho0;
   particles[i].dp *= sph_param.m / sph_param.rho0;
   float coef = 0.1;
