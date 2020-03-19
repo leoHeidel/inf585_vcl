@@ -41,7 +41,7 @@ float3 gradW(float h, float3 p){
 }
 
 
-__kernel void compute_constraints(__global const struct sph_parameters* param, __global const float3 *q, __global const int *neighbors, 
+__kernel void compute_constraints(__global const struct sph_parameters* param, __global const float3 *q, __global const int *neighbors,
       __global const int *n_neighbors, __global float *lambda) {
   int i = get_global_id(0);
   int n = min(param->nb_neighbors, n_neighbors[i]);
@@ -56,12 +56,12 @@ __kernel void compute_constraints(__global const struct sph_parameters* param, _
     sum += dot(grad_ij,grad_ij);
   }
   sum += dot(ci,ci);
-  rho *= param->m; 
+  rho *= param->m;
   lambda[i] = - (rho - param->rho0) * param->rho0 / (sum + param->epsilon);
-  lambda[i] /= param->m * param->m; 
+  lambda[i] /= param->m * param->m;
 }
 
-__kernel void compute_dp(__global const struct sph_parameters* param, __global const float3 *q, __global const int *neighbors, 
+__kernel void compute_dp(__global const struct sph_parameters* param, __global const float3 *q, __global const int *neighbors,
       __global const int *n_neighbors, __global const float *lambda, __global float3 *dp){
   int i = get_global_id(0);
   int n = min(param->nb_neighbors, n_neighbors[i]);
@@ -69,14 +69,15 @@ __kernel void compute_dp(__global const struct sph_parameters* param, __global c
   dp[i] = zero;
   for (int j_idx = 0; j_idx < n; j_idx++) {
     int j = neighbors[param->nb_neighbors * i + j_idx];
-    float s = 0; //- 0.1f * pow(W(particles[i].q - particles[j].q)/W(vcl::vec3(0.2f*sph_param.h, 0.f, 0.f)), 4.f); // homogeneous h^-3
+    float3 dq = {0.1f*param->h, 0.f, 0.f};
+    float s = - 0.1f * pow(W(param->h, q[i] - q[j])/W(param->h, dq), 4.f); // homogeneous h^-3
     dp[i] += (lambda[i] + lambda[j] + s) * gradW(param->h, q[i] - q[j]); // homogeneous h^-2;
   }
   dp[i] *= param->m / param->rho0;
   float coef = 0.1;
   float d = length(dp[i]);
   d = d < param->h * coef ? 1 : d / (param->h * coef) ;
-  dp[i] /= d; 
+  dp[i] /= d;
 }
 
 __kernel void solve_collisions(__global const struct sph_parameters* param,  __global const float3 *q, __global float3 *dp){

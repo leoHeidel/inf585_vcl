@@ -134,8 +134,8 @@ void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_struct
     borders.shader = shaders["curve"];
 
     initialize_sph();
-    //sphere.uniform.transform.scaling = sph_param.h / 2;
-    disc.uniform.transform.scaling = sph_param.h / 2;
+    //sphere.uniform.transform.scaling = sph_param.h / 3;
+    disc.uniform.transform.scaling = sph_param.h / 3;
 
     gui_param.display_field = true;
     gui_param.display_particles = true;

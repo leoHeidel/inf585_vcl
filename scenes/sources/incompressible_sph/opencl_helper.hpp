@@ -24,7 +24,7 @@ struct sph_parameters
     cl_float c = 0.07;
     cl_float dt = 0.02f;
 };
- 
+
 
 struct OCLHelper {
     std::string kernel_paths = "scenes/sources/incompressible_sph/kernels/";
@@ -32,13 +32,13 @@ struct OCLHelper {
     cl_device_id device_id = NULL;
     cl_command_queue command_queue;
 
-    int nb_particles=3500;
+    int nb_particles=2000;
     int hash_table_size=36;
     int table_list_size=40;
     int nb_neighbors=40;
 
-    size_t local_item_size = 16; 
-    
+    size_t local_item_size = 16;
+
     cl_mem sph_param_mem;
     cl_mem p_mem;
     cl_mem table_mem;
@@ -50,6 +50,7 @@ struct OCLHelper {
     cl_mem dp_mem;
     cl_mem v_mem;
     cl_mem v_copy_mem;
+    cl_mem w_mem;
 
     cl_program hashmap_program;
     cl_program solver_program;
@@ -65,11 +66,13 @@ struct OCLHelper {
 
     cl_kernel befor_solver_kernel;
     cl_kernel update_position_speed_kernel;
+    cl_kernel update_w_kernel;
+    cl_kernel apply_vorticity_kernel;
     cl_kernel apply_viscosity_kernel;
 
-    
+
     void init_context(sph_parameters sph_param);
-    
+
     void set_sph_param(sph_parameters sph_param);
     void befor_solver(std::vector<vcl::vec3> positions, std::vector<vcl::vec3> v);
     std::vector<vcl::vec3> get_v();

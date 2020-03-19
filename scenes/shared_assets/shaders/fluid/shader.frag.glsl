@@ -22,8 +22,8 @@ uniform int specular_exponent = 128;
 
 vec3 light = vec3(camera_position.x, camera_position.y, camera_position.z);
 
-float near = 0.1;
-float far  = 20.0;
+float near = 0.01;
+float far  = 5.0;
 
 float LinearizeDepth(float depth)
 {
