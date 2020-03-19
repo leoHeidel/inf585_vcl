@@ -142,10 +142,13 @@ void scene_model::display(std::map<std::string,GLuint>& shaders, scene_structure
     uniform(shader,"perspective",scene.camera.perspective.matrix()); //opengl_debug();
     uniform(shader,"view",scene.camera.view_matrix()); //opengl_debug();
     uniform(shader,"camera_position",scene.camera.camera_position()); //opengl_debug();
+    glBindVertexArray(billboard.data.vao); //opengl_debug();
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, billboard.data.vbo_index); //opengl_debug();
     for(size_t k=0; k<particles.size(); ++k) {
       uniform(shader, "translation", particles[k].p); //opengl_debug();
-      vcl::draw(billboard.data); //opengl_debug();
+      glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr); //opengl_debug();
     }
+    glBindVertexArray(0);
 }
 
 
