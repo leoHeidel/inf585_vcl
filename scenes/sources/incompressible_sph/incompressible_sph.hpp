@@ -1,5 +1,7 @@
 #pragma once
 
+#include <chrono> 
+
 #include "scenes/base/base.hpp"
 #include "opencl_helper.hpp"
 
@@ -35,6 +37,14 @@ struct gui_parameters
 struct scene_model : scene_base
 {
     int count = 0;
+
+    float alpha_time = 0.97;
+    float pre_solver_time;
+    float neighboors_time;
+    float solver_time;
+    float post_solver_time;
+    float render_time;
+    float total_time;
 
     OCLHelper oclHelper;
     void initialize_sph();

@@ -17,7 +17,7 @@ struct sph_parameters
     cl_int table_list_size=64;
     cl_int nb_neighbors=40;
 
-    cl_float h = 0.1f;
+    cl_float h = 0.08f;
     cl_float rho0 = 1000.0f;
     cl_float m; // rho0*h*h*h
     cl_float epsilon = 1e-3f;

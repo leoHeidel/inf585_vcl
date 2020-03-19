@@ -29,51 +29,87 @@ void scene_model::initialize_sph()
     oclHelper.init_context(sph_param);
 }
 
+
+
 void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_structure& scene, gui_structure& gui)
 {
+    auto start_func = std::chrono::high_resolution_clock::now();
     count++;
     if (count > 50) {
-        // const float dt = timer.update();
         set_gui();
 
         // Force constant time step
         size_t solverIterations = 3;
-        size_t subSteps = 1;
-        for(size_t t=0; t<subSteps; ++t){
-          std::vector<vec3> v;
-          for (auto &part : particles){
-              v.push_back(part.v);
-          }
-
-          std::vector<vec3> positions;
-          for (auto &part : particles){
-              positions.push_back(part.p);
-          }
-
-          oclHelper.befor_solver(positions, v);
-
-          oclHelper.make_neighboors();
-          size_t k=0;
-
-          while(k<solverIterations){
-            oclHelper.solver_step();
-            ++k;
-          }
-
-          oclHelper.update_speed();
-
-          std::vector<vcl::vec3> p_gpu = oclHelper.get_p();
-          for (size_t i = 0; i < particles.size(); i++){
-              particles[i].p = p_gpu[i];
-          }
-
-          std::vector<vcl::vec3> v_gpu = oclHelper.get_v();
-          for (size_t i = 0; i < particles.size(); i++){
-              particles[i].v = v_gpu[i];
-          }
+        auto last_time = std::chrono::high_resolution_clock::now();
+        std::vector<vec3> v;
+        for (auto &part : particles)
+        {
+            v.push_back(part.v);
         }
+
+        std::vector<vec3> positions;
+        for (auto &part : particles)
+        {
+            positions.push_back(part.p);
+        }
+        oclHelper.befor_solver(positions, v);
+
+        auto current_time = std::chrono::high_resolution_clock::now();
+        pre_solver_time = alpha_time*pre_solver_time + (1-alpha_time)*std::chrono::duration_cast<std::chrono::milliseconds>(current_time-last_time).count();
+        last_time = current_time;
+
+        oclHelper.make_neighboors();
+        size_t k=0;
+
+        current_time = std::chrono::high_resolution_clock::now();
+        neighboors_time = alpha_time*neighboors_time + (1-alpha_time)*std::chrono::duration_cast<std::chrono::milliseconds>(current_time-last_time).count();
+        last_time = current_time;
+
+        while(k<solverIterations){
+        oclHelper.solver_step();
+        ++k;
+        }
+
+        current_time = std::chrono::high_resolution_clock::now();
+        solver_time = alpha_time*solver_time + (1-alpha_time)*std::chrono::duration_cast<std::chrono::milliseconds>(current_time-last_time).count();
+        last_time = current_time;
+
+        oclHelper.update_speed();
+
+        std::vector<vcl::vec3> p_gpu = oclHelper.get_p();
+        for (size_t i = 0; i < particles.size(); i++)
+        {
+            particles[i].p = p_gpu[i];
+        }
+
+        std::vector<vcl::vec3> v_gpu = oclHelper.get_v();
+        for (size_t i = 0; i < particles.size(); i++)
+        {
+            particles[i].v = v_gpu[i];
+        }
+
+        current_time = std::chrono::high_resolution_clock::now();
+        post_solver_time = alpha_time*post_solver_time + (1-alpha_time)*std::chrono::duration_cast<std::chrono::milliseconds>(current_time-last_time).count();
+        last_time = current_time;
     }
+
+    auto befor_display = std::chrono::high_resolution_clock::now();
     display(shaders, scene, gui);
+    auto after_dislplay = std::chrono::high_resolution_clock::now();
+    render_time = alpha_time*render_time + (1-alpha_time)*std::chrono::duration_cast<std::chrono::milliseconds>(after_dislplay-befor_display).count();
+
+    auto end_func = std::chrono::high_resolution_clock::now();
+    total_time = alpha_time*total_time + (1-alpha_time)*std::chrono::duration_cast<std::chrono::milliseconds>(end_func - start_func).count();
+
+    if (! ((count + 1) % 100)) {
+        std::cout << "pre solver time: " << pre_solver_time << std::endl;
+        std::cout << "neigbors time: " << neighboors_time << std::endl;
+        std::cout << "solver time: " << solver_time << std::endl;
+        std::cout << "post solver time: " << post_solver_time << std::endl;
+        std::cout << "render time: " << render_time << std::endl;
+        std::cout << "total time: " << total_time << std::endl;
+        std::cout << std::endl;
+    }
 }
 
 void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_structure& , gui_structure& gui)
