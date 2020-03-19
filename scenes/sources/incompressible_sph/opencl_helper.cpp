@@ -6,7 +6,12 @@
 
 using namespace vcl;
 
-void OCLHelper::init_context(){
+void OCLHelper::init_context(sph_parameters sph_param){
+    nb_particles=sph_param.nb_particles;
+    hash_table_size=sph_param.hash_table_size;
+    table_list_size=sph_param.table_list_size;
+    nb_neighbors=sph_param.nb_neighbors;
+    
     std::cout << "Initialising OpenCL context" << std::endl;
 
     cl_platform_id platform_id = NULL;
@@ -38,10 +43,12 @@ void OCLHelper::init_context(){
     init_hashmap_program();
     init_solver_program();
     init_speed_program();
+    set_sph_param(sph_param);
 }
 
 void OCLHelper::init_buffers(){
     cl_int ret;
+    sph_param_mem = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(sph_parameters), NULL, &ret);
     p_mem = clCreateBuffer(context, CL_MEM_READ_ONLY, nb_particles * sizeof(cl_float3), NULL, &ret);
     table_mem = clCreateBuffer(context, CL_MEM_READ_WRITE, hash_table_size * table_list_size * sizeof(cl_int), NULL, &ret);
     table_count_mem = clCreateBuffer(context, CL_MEM_READ_WRITE,  hash_table_size * sizeof(cl_int), NULL, &ret);
@@ -63,15 +70,17 @@ void OCLHelper::init_hashmap_program(){
     fill_hashmap_kernel = clCreateKernel(hashmap_program, "fill_hashmap", &ret);
     find_neighbors_kernel = clCreateKernel(hashmap_program, "find_neighbors", &ret);
 
-    ret = clSetKernelArg(fill_hashmap_kernel, 0, sizeof(cl_mem), (void *)&p_mem);
-    ret = clSetKernelArg(fill_hashmap_kernel, 1, sizeof(cl_mem), (void *)&table_mem);
-    ret = clSetKernelArg(fill_hashmap_kernel, 2, sizeof(cl_mem), (void *)&table_count_mem);
+    ret = clSetKernelArg(fill_hashmap_kernel, 0, sizeof(cl_mem), (void *)&sph_param_mem);
+    ret = clSetKernelArg(fill_hashmap_kernel, 1, sizeof(cl_mem), (void *)&p_mem);
+    ret = clSetKernelArg(fill_hashmap_kernel, 2, sizeof(cl_mem), (void *)&table_mem);
+    ret = clSetKernelArg(fill_hashmap_kernel, 3, sizeof(cl_mem), (void *)&table_count_mem);
 
-    ret = clSetKernelArg(find_neighbors_kernel, 0, sizeof(cl_mem), (void *)&p_mem);
-    ret = clSetKernelArg(find_neighbors_kernel, 1, sizeof(cl_mem), (void *)&table_mem);
-    ret = clSetKernelArg(find_neighbors_kernel, 2, sizeof(cl_mem), (void *)&table_count_mem);
-    ret = clSetKernelArg(find_neighbors_kernel, 3, sizeof(cl_mem), (void *)&neighbors_mem);
-    ret = clSetKernelArg(find_neighbors_kernel, 4, sizeof(cl_mem), (void *)&n_neighbors_mem);
+    ret = clSetKernelArg(find_neighbors_kernel, 0, sizeof(cl_mem), (void *)&sph_param_mem);
+    ret = clSetKernelArg(find_neighbors_kernel, 1, sizeof(cl_mem), (void *)&p_mem);
+    ret = clSetKernelArg(find_neighbors_kernel, 2, sizeof(cl_mem), (void *)&table_mem);
+    ret = clSetKernelArg(find_neighbors_kernel, 3, sizeof(cl_mem), (void *)&table_count_mem);
+    ret = clSetKernelArg(find_neighbors_kernel, 4, sizeof(cl_mem), (void *)&neighbors_mem);
+    ret = clSetKernelArg(find_neighbors_kernel, 5, sizeof(cl_mem), (void *)&n_neighbors_mem);
 }
 
 void OCLHelper::init_solver_program(){
@@ -83,19 +92,22 @@ void OCLHelper::init_solver_program(){
     solve_collisions_kernel = clCreateKernel(solver_program, "solve_collisions", &ret);
     add_position_correction_kernel = clCreateKernel(solver_program, "add_position_correction", &ret);
     
-    ret = clSetKernelArg(compute_constraints_kernel, 0, sizeof(cl_mem), (void *)&q_mem);
-    ret = clSetKernelArg(compute_constraints_kernel, 1, sizeof(cl_mem), (void *)&neighbors_mem);
-    ret = clSetKernelArg(compute_constraints_kernel, 2, sizeof(cl_mem), (void *)&n_neighbors_mem);
-    ret = clSetKernelArg(compute_constraints_kernel, 3, sizeof(cl_mem), (void *)&lambda_mem);
+    ret = clSetKernelArg(compute_constraints_kernel, 0, sizeof(cl_mem), (void *)&sph_param_mem);
+    ret = clSetKernelArg(compute_constraints_kernel, 1, sizeof(cl_mem), (void *)&q_mem);
+    ret = clSetKernelArg(compute_constraints_kernel, 2, sizeof(cl_mem), (void *)&neighbors_mem);
+    ret = clSetKernelArg(compute_constraints_kernel, 3, sizeof(cl_mem), (void *)&n_neighbors_mem);
+    ret = clSetKernelArg(compute_constraints_kernel, 4, sizeof(cl_mem), (void *)&lambda_mem);
 
-    ret = clSetKernelArg(compute_dp_kernel, 0, sizeof(cl_mem), (void *)&q_mem);
-    ret = clSetKernelArg(compute_dp_kernel, 1, sizeof(cl_mem), (void *)&neighbors_mem);
-    ret = clSetKernelArg(compute_dp_kernel, 2, sizeof(cl_mem), (void *)&n_neighbors_mem);
-    ret = clSetKernelArg(compute_dp_kernel, 3, sizeof(cl_mem), (void *)&lambda_mem);
-    ret = clSetKernelArg(compute_dp_kernel, 4, sizeof(cl_mem), (void *)&dp_mem);
+    ret = clSetKernelArg(compute_dp_kernel, 0, sizeof(cl_mem), (void *)&sph_param_mem);
+    ret = clSetKernelArg(compute_dp_kernel, 1, sizeof(cl_mem), (void *)&q_mem);
+    ret = clSetKernelArg(compute_dp_kernel, 2, sizeof(cl_mem), (void *)&neighbors_mem);
+    ret = clSetKernelArg(compute_dp_kernel, 3, sizeof(cl_mem), (void *)&n_neighbors_mem);
+    ret = clSetKernelArg(compute_dp_kernel, 4, sizeof(cl_mem), (void *)&lambda_mem);
+    ret = clSetKernelArg(compute_dp_kernel, 5, sizeof(cl_mem), (void *)&dp_mem);
 
-    ret = clSetKernelArg(solve_collisions_kernel, 0, sizeof(cl_mem), (void *)&q_mem);
-    ret = clSetKernelArg(solve_collisions_kernel, 1, sizeof(cl_mem), (void *)&dp_mem);
+    ret = clSetKernelArg(solve_collisions_kernel, 0, sizeof(cl_mem), (void *)&sph_param_mem);
+    ret = clSetKernelArg(solve_collisions_kernel, 1, sizeof(cl_mem), (void *)&q_mem);
+    ret = clSetKernelArg(solve_collisions_kernel, 2, sizeof(cl_mem), (void *)&dp_mem);
     
     ret = clSetKernelArg(add_position_correction_kernel, 0, sizeof(cl_mem), (void *)&dp_mem);
     ret = clSetKernelArg(add_position_correction_kernel, 1, sizeof(cl_mem), (void *)&q_mem);
@@ -109,20 +121,22 @@ void OCLHelper::init_speed_program(){
     apply_viscosity_kernel = clCreateKernel(speed_program, "apply_viscosity", &ret);
 
     // Set the arguments of the kernels
-    ret = clSetKernelArg(befor_solver_kernel, 0, sizeof(cl_mem), (void *)&p_mem);
-    ret = clSetKernelArg(befor_solver_kernel, 1, sizeof(cl_mem), (void *)&v_mem);
-    ret = clSetKernelArg(befor_solver_kernel, 2, sizeof(cl_mem), (void *)&q_mem);
+    ret = clSetKernelArg(befor_solver_kernel, 0, sizeof(cl_mem), (void *)&sph_param_mem);
+    ret = clSetKernelArg(befor_solver_kernel, 1, sizeof(cl_mem), (void *)&p_mem);
+    ret = clSetKernelArg(befor_solver_kernel, 2, sizeof(cl_mem), (void *)&v_mem);
+    ret = clSetKernelArg(befor_solver_kernel, 3, sizeof(cl_mem), (void *)&q_mem);
 
-    ret = clSetKernelArg(update_position_speed_kernel, 0, sizeof(cl_mem), (void *)&q_mem);
-    ret = clSetKernelArg(update_position_speed_kernel, 1, sizeof(cl_mem), (void *)&p_mem);
-    ret = clSetKernelArg(update_position_speed_kernel, 2, sizeof(cl_mem), (void *)&v_copy_mem);
+    ret = clSetKernelArg(update_position_speed_kernel, 0, sizeof(cl_mem), (void *)&sph_param_mem);
+    ret = clSetKernelArg(update_position_speed_kernel, 1, sizeof(cl_mem), (void *)&q_mem);
+    ret = clSetKernelArg(update_position_speed_kernel, 2, sizeof(cl_mem), (void *)&p_mem);
+    ret = clSetKernelArg(update_position_speed_kernel, 3, sizeof(cl_mem), (void *)&v_copy_mem);
 
-    ret = clSetKernelArg(apply_viscosity_kernel, 0, sizeof(cl_mem), (void *)&q_mem);
-    ret = clSetKernelArg(apply_viscosity_kernel, 1, sizeof(cl_mem), (void *)&neighbors_mem);
-    ret = clSetKernelArg(apply_viscosity_kernel, 2, sizeof(cl_mem), (void *)&n_neighbors_mem);
-    ret = clSetKernelArg(apply_viscosity_kernel, 3, sizeof(cl_mem), (void *)&v_copy_mem);
-    ret = clSetKernelArg(apply_viscosity_kernel, 4, sizeof(cl_mem), (void *)&v_mem);
-
+    ret = clSetKernelArg(apply_viscosity_kernel, 0, sizeof(cl_mem), (void *)&sph_param_mem);
+    ret = clSetKernelArg(apply_viscosity_kernel, 1, sizeof(cl_mem), (void *)&q_mem);
+    ret = clSetKernelArg(apply_viscosity_kernel, 2, sizeof(cl_mem), (void *)&neighbors_mem);
+    ret = clSetKernelArg(apply_viscosity_kernel, 3, sizeof(cl_mem), (void *)&n_neighbors_mem);
+    ret = clSetKernelArg(apply_viscosity_kernel, 4, sizeof(cl_mem), (void *)&v_copy_mem);
+    ret = clSetKernelArg(apply_viscosity_kernel, 5, sizeof(cl_mem), (void *)&v_mem);
 }
 
 
@@ -156,6 +170,14 @@ cl_program OCLHelper::load_source(std::string kernelName){
 }
 
 
+void OCLHelper::set_sph_param(sph_parameters sph_param){
+    cl_int ret;
+    nb_particles=sph_param.nb_particles;
+    hash_table_size=sph_param.hash_table_size;
+    table_list_size=sph_param.table_list_size;
+    nb_neighbors=sph_param.nb_neighbors;
+    ret = clEnqueueWriteBuffer(command_queue, sph_param_mem, CL_TRUE, 0,  sizeof(sph_param), &sph_param, 0, NULL, NULL);
+}
 
 
 void OCLHelper::make_neighboors(){
@@ -168,7 +190,6 @@ void OCLHelper::make_neighboors(){
 
     // Execute the OpenCL kernel on the list
     size_t global_item_size = nb_particles;
-    size_t local_item_size = 4; 
     cl_event  last_kernel;
     ret = clEnqueueNDRangeKernel(command_queue, fill_hashmap_kernel, 1, NULL, 
             &global_item_size, &local_item_size, 1, &barrier, &last_kernel);
@@ -181,7 +202,6 @@ void OCLHelper::solver_step(){
     cl_event  barrier;
     ret = clEnqueueBarrierWithWaitList(command_queue, 0, NULL, &barrier);
     size_t global_item_size = nb_particles;
-    size_t local_item_size = 4; 
     cl_event  last_kernel;
     ret = clEnqueueNDRangeKernel(command_queue, compute_constraints_kernel, 1, NULL, 
             &global_item_size, &local_item_size, 1, &barrier, &last_kernel);
@@ -198,7 +218,6 @@ void OCLHelper::update_speed(){
     cl_event  barrier;
     ret = clEnqueueBarrierWithWaitList(command_queue, 0, NULL, &barrier);
     size_t global_item_size = nb_particles;
-    size_t local_item_size = 4; 
     cl_event  last_kernel;
 
     ret = clEnqueueNDRangeKernel(command_queue, update_position_speed_kernel, 1, NULL, 
@@ -264,7 +283,6 @@ void OCLHelper::befor_solver(std::vector<vec3> positions, std::vector<vec3> v){
     cl_event  barrier;
     ret = clEnqueueBarrierWithWaitList(command_queue, 0, NULL, &barrier);
     size_t global_item_size = nb_particles;
-    size_t local_item_size = 4; 
     ret = clEnqueueNDRangeKernel(command_queue, befor_solver_kernel, 1, NULL, 
             &global_item_size, &local_item_size, 1, &barrier, NULL);
 
