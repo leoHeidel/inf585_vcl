@@ -101,7 +101,7 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
     render_time = alpha_time*render_time + (1-alpha_time)*std::chrono::duration_cast<std::chrono::milliseconds>(after_dislplay-befor_display).count();
 
     auto end_func = std::chrono::high_resolution_clock::now(); 
-    total_time = alpha_time*total_time + (1-alpha_time)*std::chrono::duration_cast<std::chrono::milliseconds>(after_dislplay-befor_display).count();
+    total_time = alpha_time*total_time + (1-alpha_time)*std::chrono::duration_cast<std::chrono::milliseconds>(end_func - start_func).count();
 
     if (! ((count + 1) % 100)) {
         std::cout << "pre solver time: " << pre_solver_time << std::endl;

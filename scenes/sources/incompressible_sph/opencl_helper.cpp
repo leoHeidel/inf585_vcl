@@ -213,6 +213,9 @@ void OCLHelper::make_neighboors(){
             &global_item_size, &local_item_size, 1, &barrier, &last_kernel);
     ret = clEnqueueNDRangeKernel(command_queue, find_neighbors_kernel, 1, NULL,
             &global_item_size, &local_item_size, 1, &last_kernel, NULL);
+    
+
+    clFinish(command_queue);
 }
 
 void OCLHelper::solver_step(){
@@ -229,6 +232,9 @@ void OCLHelper::solver_step(){
             &global_item_size, &local_item_size, 1, &last_kernel,  &last_kernel);
     ret = clEnqueueNDRangeKernel(command_queue, add_position_correction_kernel, 1, NULL,
             &global_item_size, &local_item_size, 1, &last_kernel,  &last_kernel);
+    
+
+    clFinish(command_queue);
 }
 
 void OCLHelper::update_speed(){
@@ -310,6 +316,9 @@ void OCLHelper::befor_solver(std::vector<vec3> positions, std::vector<vec3> v){
 
     free (v_array);
     free(positions_array);
+    
+
+    clFinish(command_queue);
 }
 
 
