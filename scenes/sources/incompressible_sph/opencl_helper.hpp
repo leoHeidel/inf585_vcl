@@ -52,16 +52,23 @@ struct OCLHelper {
     cl_kernel update_position_speed_kernel;
     cl_kernel apply_viscosity_kernel;
 
+    
+    void init_context();
+    
     void befor_solver(std::vector<vcl::vec3> positions, std::vector<vcl::vec3> v);
+    std::vector<vcl::vec3> get_v();
+    std::vector<vcl::vec3> get_p();
     void make_neighboors();
     void solver_step();
     void update_speed();
-    void init_context();
-    void init_buffers();
-    void test_context();
 
     ~OCLHelper();
 
     private:
-    std::string getSource(std::string kernelName);
+    void init_buffers();
+    void init_hashmap_program();
+    void init_solver_program();
+    void init_speed_program();
+
+    cl_program load_source(std::string kernelName);
 };

@@ -7,7 +7,7 @@ __constant float h = 0.1f;
 __constant float rho0 = 1000.0f;
 __constant float m = 1;
 __constant float epsilon = 1e-3f;
-__constant float c = 0.05;
+__constant float c = 0.07;
 __constant float dt = 0.02f;
 
 float W(float3 p);

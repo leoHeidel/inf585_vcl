@@ -51,6 +51,9 @@ struct gui_parameters
 
 struct scene_model : scene_base
 {
+
+    int count = 0;
+
     OCLHelper oclHelper;
     void initialize_sph();
     void setup_data(std::map<std::string,GLuint>& shaders, scene_structure& scene, gui_structure& gui);
@@ -69,16 +72,6 @@ struct scene_model : scene_base
     float W(const vcl::vec3 & p);
     vcl::vec3 gradW(const vcl::vec3 & p);
     vcl::vec3 gradW_spkiky(const vcl::vec3 & p);
-
-    void find_neighbors();
-    void compute_constraints();
-    void compute_dP(size_t i);
-    void solve_collision(size_t i, float dt);
-    void add_position_correction();
-    void update_velocity(size_t i, float dt);
-    void apply_vorticity(size_t i);
-    void apply_viscosity();
-    void update_position(size_t i);
 
     vcl::timer_event timer;
 };
