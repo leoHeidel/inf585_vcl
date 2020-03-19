@@ -1,4 +1,4 @@
-__constant int nb_particles=16;
+__constant int nb_particles=3500;
 __constant int hash_table_size=36;
 __constant int table_list_size=40;
 __constant int nb_neighbors=40;

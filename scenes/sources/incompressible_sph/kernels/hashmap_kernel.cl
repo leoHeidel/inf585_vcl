@@ -1,7 +1,7 @@
 uint hash(int x, int y, int z);
 
 
-__constant int nb_particles=16;
+__constant int nb_particles=3500;
 __constant int hash_table_size=36;
 __constant int table_list_size=40;
 __constant int nb_neighbors=40;
@@ -46,7 +46,7 @@ __kernel void find_neighbors(__global const float3 *p, __global const int *table
                     }
                 }
             }
-        } 
+        }
     }
     n_neighbors[i] = count;
 }

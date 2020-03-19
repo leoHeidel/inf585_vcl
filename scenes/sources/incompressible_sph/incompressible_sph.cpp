@@ -30,7 +30,7 @@ void scene_model::initialize_sph()
     // Fill a square with particles
     const float epsilon = 1e-3f;
     // float dist = 0;
-    const int N_PARTICLES = 16;
+    const int N_PARTICLES = 3500;
 
     std::default_random_engine generator;
     std::normal_distribution<float> normal(0,1);
@@ -150,9 +150,13 @@ void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_struct
 {
     gui.show_frame_camera = false;
 
-    sphere = mesh_drawable( mesh_primitive_sphere(1.0f));
-    sphere.shader = shaders["mesh"];
-    sphere.uniform.color = {0,0.5,1};
+    // sphere = mesh_drawable( mesh_primitive_sphere(1.0f));
+    // sphere.shader = shaders["mesh"];
+    // sphere.uniform.color = {0,0.5,1};
+
+    disc = mesh_drawable( mesh_primitive_disc(1.0f));
+    disc.shader = shaders["fluid"];
+    disc.uniform.color = {0,0.5,1};
 
     std::vector<vec3> borders_segments = {{-1,-1,-1},{1,-1,-1}, {1,-1,-1},{1,1,-1}, {1,1,-1},{-1,1,-1}, {-1,1,-1},{-1,-1,-1},
                                           {-1,-1,1} ,{1,-1,1},  {1,-1,1}, {1,1,1},  {1,1,1}, {-1,1,1},  {-1,1,1}, {-1,-1,1},
@@ -162,7 +166,8 @@ void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_struct
     borders.shader = shaders["curve"];
 
     initialize_sph();
-    sphere.uniform.transform.scaling = sph_param.h / 2;
+    //sphere.uniform.transform.scaling = sph_param.h / 2;
+    disc.uniform.transform.scaling = sph_param.h / 2;
 
     gui_param.display_field = true;
     gui_param.display_particles = true;
@@ -176,8 +181,10 @@ void scene_model::display(std::map<std::string,GLuint>& shaders, scene_structure
 
     const size_t N = particles.size();
     for(size_t k=0; k<N; ++k) {
-        sphere.uniform.transform.translation = particles[k].p;
-        draw(sphere, scene.camera);
+        //sphere.uniform.transform.translation = particles[k].p;
+        disc.uniform.transform.translation = particles[k].p;
+        disc.uniform.transform.rotation = scene.camera.orientation;
+        draw(disc, scene.camera);
     }
 }
 

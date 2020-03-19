@@ -1,4 +1,4 @@
-__constant int nb_particles=16;
+__constant int nb_particles=3500;
 __constant int hash_table_size=36;
 __constant int table_list_size=40;
 __constant int nb_neighbors=40;
@@ -37,7 +37,7 @@ float3 gradW(float3 p){
 }
 
 
-__kernel void compute_constraints(__global const float3 *q, __global const int *neighbors, 
+__kernel void compute_constraints(__global const float3 *q, __global const int *neighbors,
       __global const int *n_neighbors, __global float *lambda) {
   int i = get_global_id(0);
   int n = min(nb_neighbors, n_neighbors[i]);
@@ -52,12 +52,12 @@ __kernel void compute_constraints(__global const float3 *q, __global const int *
     sum += dot(grad_ij,grad_ij);
   }
   sum += dot(ci,ci);
-  rho *= m; 
+  rho *= m;
   lambda[i] = - (rho - rho0) * rho0 / (sum + epsilon);
-  lambda[i] /= m * m; 
+  lambda[i] /= m * m;
 }
 
-__kernel void compute_dp(__global const float3 *q, __global const int *neighbors, 
+__kernel void compute_dp(__global const float3 *q, __global const int *neighbors,
       __global const int *n_neighbors, __global const float *lambda, __global float3 *dp){
   int i = get_global_id(0);
   int n = min(nb_neighbors, n_neighbors[i]);
@@ -72,12 +72,12 @@ __kernel void compute_dp(__global const float3 *q, __global const int *neighbors
   float coef = 0.1;
   float d = length(dp[i]);
   d = d < h * coef ? 1 : d / (h * coef) ;
-  dp[i] /= d; 
+  dp[i] /= d;
 }
 
 __kernel void solve_collisions(__global const float3 *q, __global float3 *dp){
     int i = get_global_id(0);
-    float3 d = q[i]+ dp[i]; 
+    float3 d = q[i]+ dp[i];
     float eps = 0.01f;
     d.x = clamp(d.x, -1.f + eps*(i / (float) nb_particles), 1.f - eps*(i / (float) nb_particles));
     d.y = clamp(d.y, -1.f + eps*(i / (float) nb_particles), 1.f - eps*(i / (float) nb_particles));

@@ -12,15 +12,15 @@
 #include "vcl/vcl.hpp"
 
 
- 
+
 
 struct OCLHelper {
     std::string kernel_paths = "scenes/sources/incompressible_sph/kernels/";
     cl_context context;
-    cl_device_id device_id = NULL;   
+    cl_device_id device_id = NULL;
     cl_command_queue command_queue;
 
-    int nb_particles=16;
+    int nb_particles=3500;
     int hash_table_size=36;
     int table_list_size=40;
     int nb_neighbors=40;
@@ -52,9 +52,9 @@ struct OCLHelper {
     cl_kernel update_position_speed_kernel;
     cl_kernel apply_viscosity_kernel;
 
-    
+
     void init_context();
-    
+
     void befor_solver(std::vector<vcl::vec3> positions, std::vector<vcl::vec3> v);
     std::vector<vcl::vec3> get_v();
     std::vector<vcl::vec3> get_p();
