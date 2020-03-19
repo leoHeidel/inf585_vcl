@@ -41,11 +41,7 @@ float3 gradW(float h, float3 p){
 }
 
 
-<<<<<<< HEAD
 __kernel void compute_constraints(__global const struct sph_parameters* param, __global const float3 *q, __global const int *neighbors, 
-=======
-__kernel void compute_constraints(__global const float3 *q, __global const int *neighbors,
->>>>>>> 1607dc22ab7da0e02baea750cd73883765db5b64
       __global const int *n_neighbors, __global float *lambda) {
   int i = get_global_id(0);
   int n = min(param->nb_neighbors, n_neighbors[i]);
@@ -60,21 +56,12 @@ __kernel void compute_constraints(__global const float3 *q, __global const int *
     sum += dot(grad_ij,grad_ij);
   }
   sum += dot(ci,ci);
-<<<<<<< HEAD
   rho *= param->m; 
   lambda[i] = - (rho - param->rho0) * param->rho0 / (sum + param->epsilon);
   lambda[i] /= param->m * param->m; 
 }
 
 __kernel void compute_dp(__global const struct sph_parameters* param, __global const float3 *q, __global const int *neighbors, 
-=======
-  rho *= m;
-  lambda[i] = - (rho - rho0) * rho0 / (sum + epsilon);
-  lambda[i] /= m * m;
-}
-
-__kernel void compute_dp(__global const float3 *q, __global const int *neighbors,
->>>>>>> 1607dc22ab7da0e02baea750cd73883765db5b64
       __global const int *n_neighbors, __global const float *lambda, __global float3 *dp){
   int i = get_global_id(0);
   int n = min(param->nb_neighbors, n_neighbors[i]);
@@ -88,13 +75,8 @@ __kernel void compute_dp(__global const float3 *q, __global const int *neighbors
   dp[i] *= param->m / param->rho0;
   float coef = 0.1;
   float d = length(dp[i]);
-<<<<<<< HEAD
   d = d < param->h * coef ? 1 : d / (param->h * coef) ;
   dp[i] /= d; 
-=======
-  d = d < h * coef ? 1 : d / (h * coef) ;
-  dp[i] /= d;
->>>>>>> 1607dc22ab7da0e02baea750cd73883765db5b64
 }
 
 __kernel void solve_collisions(__global const struct sph_parameters* param,  __global const float3 *q, __global float3 *dp){
