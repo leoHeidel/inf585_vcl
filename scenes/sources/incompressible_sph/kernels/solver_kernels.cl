@@ -1,4 +1,4 @@
-__constant int nb_particles=3500;
+__constant int nb_particles=2000;
 __constant int hash_table_size=36;
 __constant int table_list_size=40;
 __constant int nb_neighbors=40;
@@ -65,7 +65,8 @@ __kernel void compute_dp(__global const float3 *q, __global const int *neighbors
   dp[i] = zero;
   for (int j_idx = 0; j_idx < n; j_idx++) {
     int j = neighbors[nb_neighbors * i + j_idx];
-    float s = 0; //- 0.1f * pow(W(particles[i].q - particles[j].q)/W(vcl::vec3(0.2f*sph_param.h, 0.f, 0.f)), 4.f); // homogeneous h^-3
+    float3 dq = {0.1f*h, 0.f, 0.f};
+    float s = - 0.1f * pow(W(q[i] - q[j])/W(dq), 4.f); // homogeneous h^-3
     dp[i] += (lambda[i] + lambda[j] + s) * gradW(q[i] - q[j]); // homogeneous h^-2;
   }
   dp[i] *= m / rho0;

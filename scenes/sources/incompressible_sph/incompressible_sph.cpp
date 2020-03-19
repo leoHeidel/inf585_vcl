@@ -30,7 +30,7 @@ void scene_model::initialize_sph()
     // Fill a square with particles
     const float epsilon = 1e-3f;
     // float dist = 0;
-    const int N_PARTICLES = 3500;
+    const int N_PARTICLES = 2000;
 
     std::default_random_engine generator;
     std::normal_distribution<float> normal(0,1);
@@ -61,40 +61,42 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
 
         // Force constant time step
         size_t solverIterations = 3;
+        size_t subSteps = 1;
+        for(size_t t=0; t<subSteps; ++t){
+          std::vector<vec3> v;
+          for (auto &part : particles)
+          {
+              v.push_back(part.v);
+          }
 
-        std::vector<vec3> v;
-        for (auto &part : particles)
-        {
-            v.push_back(part.v);
-        }
+          std::vector<vec3> positions;
+          for (auto &part : particles)
+          {
+              positions.push_back(part.p);
+          }
+          oclHelper.befor_solver(positions, v);
 
-        std::vector<vec3> positions;
-        for (auto &part : particles)
-        {
-            positions.push_back(part.p);
-        }
-        oclHelper.befor_solver(positions, v);
+          oclHelper.make_neighboors();
+          size_t k=0;
 
-        oclHelper.make_neighboors();
-        size_t k=0;
+          while(k<solverIterations){
+            oclHelper.solver_step();
+            ++k;
+          }
 
-        while(k<solverIterations){
-        oclHelper.solver_step();
-        ++k;
-        }
+          oclHelper.update_speed();
 
-        oclHelper.update_speed();
+          std::vector<vcl::vec3> p_gpu = oclHelper.get_p();
+          for (size_t i = 0; i < particles.size(); i++)
+          {
+              particles[i].p = p_gpu[i];
+          }
 
-        std::vector<vcl::vec3> p_gpu = oclHelper.get_p();
-        for (size_t i = 0; i < particles.size(); i++)
-        {
-            particles[i].p = p_gpu[i];
-        }
-
-        std::vector<vcl::vec3> v_gpu = oclHelper.get_v();
-        for (size_t i = 0; i < particles.size(); i++)
-        {
-            particles[i].v = v_gpu[i];
+          std::vector<vcl::vec3> v_gpu = oclHelper.get_v();
+          for (size_t i = 0; i < particles.size(); i++)
+          {
+              particles[i].v = v_gpu[i];
+          }
         }
     }
     display(shaders, scene, gui);
@@ -166,8 +168,8 @@ void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_struct
     borders.shader = shaders["curve"];
 
     initialize_sph();
-    //sphere.uniform.transform.scaling = sph_param.h / 2;
-    disc.uniform.transform.scaling = sph_param.h / 2;
+    //sphere.uniform.transform.scaling = sph_param.h / 3;
+    disc.uniform.transform.scaling = sph_param.h / 3;
 
     gui_param.display_field = true;
     gui_param.display_particles = true;

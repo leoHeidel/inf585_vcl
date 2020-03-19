@@ -20,7 +20,7 @@ struct OCLHelper {
     cl_device_id device_id = NULL;
     cl_command_queue command_queue;
 
-    int nb_particles=3500;
+    int nb_particles=2000;
     int hash_table_size=36;
     int table_list_size=40;
     int nb_neighbors=40;
@@ -35,6 +35,7 @@ struct OCLHelper {
     cl_mem dp_mem;
     cl_mem v_mem;
     cl_mem v_copy_mem;
+    cl_mem w_mem;
 
     cl_program hashmap_program;
     cl_program solver_program;
@@ -50,7 +51,10 @@ struct OCLHelper {
 
     cl_kernel befor_solver_kernel;
     cl_kernel update_position_speed_kernel;
+    cl_kernel update_w_kernel;
+    cl_kernel apply_vorticity_kernel;
     cl_kernel apply_viscosity_kernel;
+
 
 
     void init_context();
