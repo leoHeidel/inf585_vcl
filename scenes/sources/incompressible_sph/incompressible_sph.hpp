@@ -49,7 +49,7 @@ struct scene_model : scene_base
 
     gui_parameters gui_param;
     vcl::mesh_drawable sphere;
-    vcl::mesh_drawable disc;
+    vcl::mesh_drawable billboard;
     vcl::segments_drawable borders;
     vcl::segments_drawable spheres;
 

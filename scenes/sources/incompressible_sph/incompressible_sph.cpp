@@ -1,5 +1,3 @@
-
-
 #include "incompressible_sph.hpp"
 
 #include <random>
@@ -43,14 +41,12 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
         size_t subSteps = 1;
         for(size_t t=0; t<subSteps; ++t){
           std::vector<vec3> v;
-          for (auto &part : particles)
-          {
+          for (auto &part : particles){
               v.push_back(part.v);
           }
 
           std::vector<vec3> positions;
-          for (auto &part : particles)
-          {
+          for (auto &part : particles){
               positions.push_back(part.p);
           }
 
@@ -67,14 +63,12 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
           oclHelper.update_speed();
 
           std::vector<vcl::vec3> p_gpu = oclHelper.get_p();
-          for (size_t i = 0; i < particles.size(); i++)
-          {
+          for (size_t i = 0; i < particles.size(); i++){
               particles[i].p = p_gpu[i];
           }
 
           std::vector<vcl::vec3> v_gpu = oclHelper.get_v();
-          for (size_t i = 0; i < particles.size(); i++)
-          {
+          for (size_t i = 0; i < particles.size(); i++){
               particles[i].v = v_gpu[i];
           }
         }
@@ -86,14 +80,7 @@ void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_struct
 {
     gui.show_frame_camera = false;
 
-    // sphere = mesh_drawable( mesh_primitive_sphere(1.0f));
-    // sphere.shader = shaders["mesh"];
-    // sphere.uniform.color = {0,0.5,1};
-
-    disc = mesh_drawable( mesh_primitive_quad());
-    // disc.shader = shaders["fluid"];
-    // disc.uniform.color = {0,0.5,1};
-
+    billboard = mesh_drawable( mesh_primitive_quad());
     std::vector<vec3> borders_segments = {{-1,-1,-1},{1,-1,-1}, {1,-1,-1},{1,1,-1}, {1,1,-1},{-1,1,-1}, {-1,1,-1},{-1,-1,-1},
                                           {-1,-1,1} ,{1,-1,1},  {1,-1,1}, {1,1,1},  {1,1,1}, {-1,1,1},  {-1,1,1}, {-1,-1,1},
                                           {-1,-1,-1},{-1,-1,1}, {1,-1,-1},{1,-1,1}, {1,1,-1},{1,1,1},   {-1,1,-1},{-1,1,1}};
@@ -101,16 +88,7 @@ void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_struct
     borders.uniform.color = {0,0,0};
     borders.shader = shaders["curve"];
 
-    // std::vector<vec3> points;
-    // for(size_t k=0; k<particles.size(); ++k){
-    //   points.push_back(particles[k].p);
-    // }
-
     initialize_sph();
-    //sphere.uniform.transform.scaling = sph_param.h / 3;
-    //disc.uniform.transform.scaling = sph_param.h / 3 *2;
-
-
 
     gui_param.display_field = true;
     gui_param.display_particles = true;
@@ -120,73 +98,18 @@ void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_struct
 void scene_model::display(std::map<std::string,GLuint>& shaders, scene_structure& scene, gui_structure& )
 {
     draw(borders, scene.camera);
-    // const vec3 p00=vec3(-0.5f,-0.5f,0.0f);
-    // const vec3 p10=vec3(0.5f,-0.5f,0.0f);
-    // const vec3 p11=vec3(0.5f,0.5f,0.0f);
-    // const vec3 p01=vec3(-0.5f,0.5f,0.0);
-    // float s = sph_param.h / 3 *2;
-    // mat3 R = scene.camera.orientation;
-    //vec3 n;
-    //mesh all;
-    //all.fill_empty_fields();
-
 
     GLuint shader = shaders["fluid"];
     glUseProgram(shader);
-
     uniform(shader, "rotation", scene.camera.orientation); //opengl_debug();
     uniform(shader, "scaling", sph_param.h / 3 *2); //opengl_debug();
-
     uniform(shader,"perspective",scene.camera.perspective.matrix()); //opengl_debug();
     uniform(shader,"view",scene.camera.view_matrix()); //opengl_debug();
     uniform(shader,"camera_position",scene.camera.camera_position()); //opengl_debug();
     for(size_t k=0; k<particles.size(); ++k) {
       uniform(shader, "translation", particles[k].p); //opengl_debug();
-      // all.position.push_back(s*R*p00 + particles[k].p);
-      // all.position.push_back(s*R*p10 + particles[k].p);
-      // all.position.push_back(s*R*p11 + particles[k].p);
-      // all.position.push_back(s*R*p01 + particles[k].p);
-      // n = normalize(cross(normalize(s*R*p10-s*R*p00), normalize(s*R*p01-s*R*p00)));
-      // all.normal.push_back(n);
-      // all.normal.push_back(n);
-      // all.normal.push_back(n);
-      // all.normal.push_back(n);
-      // all.texture_uv.push_back(vec2(0,0));
-      // all.texture_uv.push_back(vec2(1,0));
-      // all.texture_uv.push_back(vec2(1,1));
-      // all.texture_uv.push_back(vec2(0,1));
-      // all.connectivity.push_back({static_cast<unsigned int>(4*k+0),static_cast<unsigned int>(4*k+1),static_cast<unsigned int>(4*k+2)});
-      // all.connectivity.push_back({static_cast<unsigned int>(4*k+0),static_cast<unsigned int>(4*k+2),static_cast<unsigned int>(4*k+3)});
-      vcl::draw(disc.data); //opengl_debug();
+      vcl::draw(billboard.data); //opengl_debug();
     }
-
-    //disc.shader = shaders["fluid"];
-    //draw(disc, scene.camera);
-
-
-
-
-    // std::vector<vec3> points;
-    // for(size_t k=0; k<particles.size(); ++k){
-    //   points.push_back(particles[k].p);
-    // }
-    // spheres = segments_gpu(points);
-    // spheres.uniform.color = {0,0,0};
-    // spheres.shader = shaders["fluid"];
-    // draw(spheres, scene.camera);
-    //GLuint texture_id = create_texture_gpu(image_load_png("scenes/sources/incompressible_sph/textures/texture.png"), GL_REPEAT, GL_REPEAT );
-    // glEnable(GL_BLEND);
-    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    // glDepthMask(GL_TRUE);
-    // glBindTexture(GL_TEXTURE_2D, texture_id);opengl_debug();
-    //const size_t N = particles.size();
-    //for(size_t k=0; k<N; ++k) {
-        //sphere.uniform.transform.translation = particles[k].p;
-        //disc.uniform.transform.translation = particles[k].p;
-        //disc.uniform.transform.rotation = scene.camera.orientation;
-        //draw(disc, scene.camera);
-    //}
-    //glBindTexture(GL_TEXTURE_2D, 0);opengl_debug();
 }
 
 
