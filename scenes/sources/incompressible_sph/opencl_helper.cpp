@@ -296,14 +296,31 @@ OCLHelper::~OCLHelper(){
 
     ret = clReleaseKernel(fill_hashmap_kernel);
     ret = clReleaseKernel(find_neighbors_kernel);
-    ret = clReleaseProgram(hashmap_program);
 
+    ret = clReleaseKernel(compute_constraints_kernel);
+    ret = clReleaseKernel(compute_dp_kernel);
+    ret = clReleaseKernel(solve_collisions_kernel);
+    ret = clReleaseKernel(add_position_correction_kernel);
+
+    ret = clReleaseKernel(befor_solver_kernel);
+    ret = clReleaseKernel(update_position_speed_kernel);
+    ret = clReleaseKernel(apply_viscosity_kernel);
+
+    ret = clReleaseProgram(hashmap_program);
+    ret = clReleaseProgram(solver_program);
+    ret = clReleaseProgram(speed_program);
+
+    ret = clReleaseMemObject(sph_param_mem);
     ret = clReleaseMemObject(p_mem);
     ret = clReleaseMemObject(table_mem);
     ret = clReleaseMemObject(table_count_mem);
     ret = clReleaseMemObject(neighbors_mem);
     ret = clReleaseMemObject(n_neighbors_mem);
-
+    ret = clReleaseMemObject(q_mem);
+    ret = clReleaseMemObject(lambda_mem);
+    ret = clReleaseMemObject(dp_mem);
+    ret = clReleaseMemObject(v_mem);
+    ret = clReleaseMemObject(v_copy_mem);
 
     ret = clFlush(command_queue);
     ret = clFinish(command_queue);

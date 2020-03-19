@@ -12,7 +12,7 @@
 // SPH simulation parameters
 struct sph_parameters
 {
-    cl_int nb_particles=2048;
+    cl_int nb_particles=4096;
     cl_int hash_table_size=1024;
     cl_int table_list_size=64;
     cl_int nb_neighbors=40;

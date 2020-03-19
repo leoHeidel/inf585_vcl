@@ -35,7 +35,6 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
 {
     count++;
     if (count > 50) {
-        const float dt = 0.02f;
         // const float dt = timer.update();
         set_gui();
 
