@@ -15,47 +15,26 @@ int counter_image = 0;
 
 void scene_model::initialize_sph()
 {
-    // Influence distance of a particle (size of the kernel)
-    const float h = 0.1f;
-
-    // Rest density (consider 1000 Kg/m^3)
-    const float rho0 = 1000.0f;
-
-    // Total mass of a particle (consider rho0 h^3)
-    const float m = rho0*h*h*h;
-
-    // Initial particle spacing (relative to h)
-    const float c = 1.2f;
-
-    // Fill a square with particles
-    const float epsilon = 1e-3f;
-    // float dist = 0;
-    const int N_PARTICLES = 2000;
-
     std::default_random_engine generator;
     std::normal_distribution<float> normal(0,1);
-    for (size_t i = 0; i < N_PARTICLES; i++)
+
+    sph_param.m = sph_param.rho0*sph_param.h*sph_param.h*sph_param.h;
+
+    for (size_t i = 0; i < sph_param.nb_particles; i++)
     {
        vec3 v = {normal(generator), normal(generator), normal(generator)};
        particle_element particle;
-       particle.p = 0.03*v;
+       particle.p = 0.3*v;
        particles.push_back(particle);
     }
 
-    sph_param.h    = h;
-    sph_param.rho0 = rho0;
-    sph_param.m    = m;
-    sph_param.eps  = epsilon;
-
-    oclHelper.init_context();
-    // oclHelper.test_context();
+    oclHelper.init_context(sph_param);
 }
 
 void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_structure& scene, gui_structure& gui)
 {
     count++;
     if (count > 50) {
-        const float dt = 0.02f;
         // const float dt = timer.update();
         set_gui();
 
@@ -100,52 +79,6 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
         }
     }
     display(shaders, scene, gui);
-}
-
-// SPH Smooth Kernel
-// homogeneous to h^-3
-float scene_model::W(const vcl::vec3 & p){
-    float d = norm(p);
-    if(d<=sph_param.h){
-        float C = 315./(64.*M_PI*powf(sph_param.h,3.));
-        float a = d/sph_param.h;
-        float b = 1-a*a;
-        return float(C*powf(b,3.));
-    }
-    return 0.f;
-}
-
-//homogeneous to h^-4
-vcl::vec3 scene_model::gradW(const vcl::vec3 & p){
-    float d = norm(p);
-    if(d<=sph_param.h){
-        float C = -6.f*315.f/(64.f*M_PI*powf(sph_param.h,5.f));
-        float a = d/sph_param.h;
-        float b = 1-a*a;
-        return C*powf(b,2.f)*p;
-    }else{
-        return vec3(0.f,0.f,0.f);
-    }
-}
-
-//homogeneous to h^-4
-vcl::vec3 scene_model::gradW_spkiky(const vcl::vec3 & p){
-    float d = norm(p);
-    if(d<=sph_param.h){
-        float B = 45 / M_PI * powf(sph_param.h, -6.f);
-        float a = sph_param.h - d;
-        return -B* a*a *p/d;
-    }else{
-        return vec3(0.f,0.f,0.f);
-    }
-}
-
-int hash_function(float x, float y, float z) {
-    //Hash function for three integers, used for the neightboor search
-    int int_x = static_cast <int> (std::floor(x));
-    int int_y = static_cast <int> (std::floor(y));
-    int int_z = static_cast <int> (std::floor(z));
-    return (int_x*11969 + int_y)*80737+int_z;
 }
 
 void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_structure& , gui_structure& gui)

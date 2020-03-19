@@ -7,11 +7,23 @@
 #endif
 #include <string>
 
-
-
 #include "vcl/vcl.hpp"
 
+// SPH simulation parameters
+struct sph_parameters
+{
+    cl_int nb_particles=4096;
+    cl_int hash_table_size=1024;
+    cl_int table_list_size=64;
+    cl_int nb_neighbors=40;
 
+    cl_float h = 0.1f;
+    cl_float rho0 = 1000.0f;
+    cl_float m; // rho0*h*h*h
+    cl_float epsilon = 1e-3f;
+    cl_float c = 0.07;
+    cl_float dt = 0.02f;
+};
 
 
 struct OCLHelper {
@@ -25,6 +37,9 @@ struct OCLHelper {
     int table_list_size=40;
     int nb_neighbors=40;
 
+    size_t local_item_size = 16;
+
+    cl_mem sph_param_mem;
     cl_mem p_mem;
     cl_mem table_mem;
     cl_mem table_count_mem;
@@ -56,9 +71,9 @@ struct OCLHelper {
     cl_kernel apply_viscosity_kernel;
 
 
+    void init_context(sph_parameters sph_param);
 
-    void init_context();
-
+    void set_sph_param(sph_parameters sph_param);
     void befor_solver(std::vector<vcl::vec3> positions, std::vector<vcl::vec3> v);
     std::vector<vcl::vec3> get_v();
     std::vector<vcl::vec3> get_p();
