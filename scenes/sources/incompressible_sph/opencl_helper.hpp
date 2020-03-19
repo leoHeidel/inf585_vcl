@@ -12,7 +12,7 @@
 // SPH simulation parameters
 struct sph_parameters
 {
-    cl_int nb_particles=4096;
+    cl_int nb_particles=4000;
     cl_int hash_table_size=1024;
     cl_int table_list_size=64;
     cl_int nb_neighbors=40;
@@ -32,9 +32,9 @@ struct OCLHelper {
     cl_device_id device_id = NULL;
     cl_command_queue command_queue;
 
-    int nb_particles=2000;
-    int hash_table_size=36;
-    int table_list_size=40;
+    int nb_particles=4000;
+    int hash_table_size=1024;
+    int table_list_size=64;
     int nb_neighbors=40;
 
     size_t local_item_size = 16;

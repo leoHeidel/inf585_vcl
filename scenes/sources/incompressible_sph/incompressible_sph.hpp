@@ -51,6 +51,7 @@ struct scene_model : scene_base
     vcl::mesh_drawable sphere;
     vcl::mesh_drawable disc;
     vcl::segments_drawable borders;
+    vcl::segments_drawable spheres;
 
     vcl::timer_event timer;
 };
