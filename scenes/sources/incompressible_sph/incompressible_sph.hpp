@@ -49,6 +49,7 @@ struct scene_model : scene_base
 
     gui_parameters gui_param;
     vcl::mesh_drawable sphere;
+    vcl::mesh_drawable disc;
     vcl::segments_drawable borders;
 
     vcl::timer_event timer;

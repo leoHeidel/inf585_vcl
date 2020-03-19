@@ -29,10 +29,10 @@ struct sph_parameters
 struct OCLHelper {
     std::string kernel_paths = "scenes/sources/incompressible_sph/kernels/";
     cl_context context;
-    cl_device_id device_id = NULL;   
+    cl_device_id device_id = NULL;
     cl_command_queue command_queue;
 
-    int nb_particles=16;
+    int nb_particles=3500;
     int hash_table_size=36;
     int table_list_size=40;
     int nb_neighbors=40;

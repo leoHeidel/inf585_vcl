@@ -53,7 +53,7 @@ __kernel void find_neighbors(__global const struct sph_parameters* param, __glob
                     }
                 }
             }
-        } 
+        }
     }
     n_neighbors[i] = count;
 }
