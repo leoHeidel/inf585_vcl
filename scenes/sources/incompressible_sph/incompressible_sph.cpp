@@ -21,7 +21,7 @@ void scene_model::initialize_sph()
     // Rest density (consider 1000 Kg/m^3)
     const float rho0 = 1000.0f;
 
-    // Total mass of a particle (consider rho0 h^2)
+    // Total mass of a particle (consider rho0 h^3)
     const float m = rho0*h*h*h;
 
     // Initial particle spacing (relative to h)
@@ -41,7 +41,7 @@ void scene_model::initialize_sph()
        particle.p = 0.03*v;
        particles.push_back(particle);
     }
-    
+
     sph_param.h    = h;
     sph_param.rho0 = rho0;
     sph_param.m    = m;

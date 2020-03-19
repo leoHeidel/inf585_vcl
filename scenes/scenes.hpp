@@ -4,5 +4,4 @@
 
 
 #include "base/base.hpp"
-#include "sources/sources_scenes.hpp"
-
+#include "scenes/sources/incompressible_sph/incompressible_sph.hpp"
