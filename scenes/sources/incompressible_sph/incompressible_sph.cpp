@@ -53,7 +53,10 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
         // Force constant time step
         size_t solverIterations = 3;
         auto last_time = std::chrono::high_resolution_clock::now();
-
+        sph_param.gx = (scene.camera.orientation*vec3(0.0f, -100.0*sph_param.h, 0.0f)).x;
+        sph_param.gy = (scene.camera.orientation*vec3(0.0f, -100.0*sph_param.h, 0.0f)).y;
+        sph_param.gz = (scene.camera.orientation*vec3(0.0f, -100.0*sph_param.h, 0.0f)).z;
+        oclHelper.set_sph_param(sph_param);
         oclHelper.befor_solver();
 
         auto current_time = std::chrono::high_resolution_clock::now();

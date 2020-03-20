@@ -24,6 +24,9 @@ struct sph_parameters
     cl_float c = 0.2;
     cl_float dt = 0.02f;
     cl_float max_relative_dp = 0.08f;
+    cl_float gx = 0.0f;
+    cl_float gy = -h*100.0f;
+    cl_float gz = 0.0f;
 };
 
 

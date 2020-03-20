@@ -11,8 +11,10 @@ struct sph_parameters {
     float c;
     float dt;
     float max_relative_dp;
+    float gx;
+    float gy;
+    float gz;
 };
-
 
 
 float W(float h, float3 p);
@@ -45,7 +47,7 @@ float3 gradW(float h, float3 p){
 
 __kernel void befor_solver(__global const struct sph_parameters* param, __global const float3 *p, __global float3 *v, __global float3 *q){
     int i = get_global_id(0);
-    float3 g = {0.f, -param->h * 100, 0.f};
+    float3 g = {param->gx, param->gy, param->gz};
     v[i]  += param->dt * g;
     q[i] = p[i] + param->dt * v[i];
 }
