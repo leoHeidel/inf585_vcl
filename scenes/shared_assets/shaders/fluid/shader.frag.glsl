@@ -34,7 +34,7 @@ float LinearizeDepth(float depth)
 
 void main()
 {
-    if(length(fragment.texture_uv.xy - vec2(0.5)) < 0.5){
+    if(length(fragment.texture_uv.xy - vec2(0.5)) < 0.53){
       float depth = LinearizeDepth(gl_FragCoord.z) / far;
       FragColor = vec4(vec3(depth), 1.0);
     }else{

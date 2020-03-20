@@ -20,7 +20,6 @@ uniform mat3 rotation = mat3(1.0,0.0,0.0, 0.0,1.0,0.0, 0.0,0.0,1.0); // user def
 uniform float scaling = 1.0;                                         // user defined scaling
 uniform vec3 scaling_axis = vec3(1.0,1.0,1.0);                       // user defined scaling
 
-
 // view transform
 uniform mat4 view;
 // perspective matrix

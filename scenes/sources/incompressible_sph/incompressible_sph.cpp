@@ -77,7 +77,7 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
         last_time = current_time;
 
         oclHelper.update_speed();
-        
+
         std::vector<vcl::vec3> p_gpu = oclHelper.get_p();
         for (size_t i = 0; i < particles.size(); i++)
         {
@@ -134,7 +134,7 @@ void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_struct
     //Set the texture to be shown on screen
     screenquad = mesh_drawable( mesh_primitive_quad(vec3(-1,-1,0),vec3(1,-1,0),vec3(1,1,0),vec3(-1,1,0)));
     screenquad.shader = shaders["render_target"];
-    screenquad.texture_id = rfbo[1];
+    //screenquad.texture_id = rfbo[1];
 }
 
 void scene_model::drawOn(GLuint buffer_id, GLuint shader, bool reverseDepth = false){
@@ -170,8 +170,6 @@ void scene_model::display(std::map<std::string,GLuint>& shaders, scene_structure
 {
     GLuint shader = shaders["fluid"];
     glUseProgram(shader);
-    glUniform1i(glGetUniformLocation(shader, "depth_tex_sampler"), 0);
-    glUniform1i(glGetUniformLocation(shader, "rev_depth_tex_sampler"), 1);
     uniform(shader, "rotation", scene.camera.orientation); //opengl_debug();
     uniform(shader, "scaling", sph_param.h / 3 *2); //opengl_debug();
     uniform(shader,"perspective",scene.camera.perspective.matrix()); //opengl_debug();
@@ -181,11 +179,17 @@ void scene_model::display(std::map<std::string,GLuint>& shaders, scene_structure
     drawOn(rfbo[0], shader, true);
 
     draw(borders, scene.camera);
+    glUseProgram(screenquad.shader);
+    glUniform1i(glGetUniformLocation(screenquad.shader, "depth_tex_sampler"), 0);
+    glUniform1i(glGetUniformLocation(screenquad.shader, "rev_depth_tex_sampler"), 1);
     glActiveTexture(GL_TEXTURE0 + 0); // Texture unit 0
     glBindTexture(GL_TEXTURE_2D, dfbo[1]);
     glActiveTexture(GL_TEXTURE0 + 1); // Texture unit 1
     glBindTexture(GL_TEXTURE_2D, rfbo[1]);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     draw(screenquad, scene.camera);
+    glDisable(GL_BLEND);
 }
 
 void scene_model::set_gui()
