@@ -112,11 +112,12 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
     }
 }
 
-void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_structure& , gui_structure& gui)
+void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_structure& scene, gui_structure& gui)
 {
     gui.show_frame_camera = false;
 
     billboard = mesh_drawable( mesh_primitive_quad());
+
     std::vector<vec3> borders_segments = {{-1,-1,-1},{1,-1,-1}, {1,-1,-1},{1,1,-1}, {1,1,-1},{-1,1,-1}, {-1,1,-1},{-1,-1,-1},
                                           {-1,-1,1} ,{1,-1,1},  {1,-1,1}, {1,1,1},  {1,1,1}, {-1,1,1},  {-1,1,1}, {-1,-1,1},
                                           {-1,-1,-1},{-1,-1,1}, {1,-1,-1},{1,-1,1}, {1,1,-1},{1,1,1},   {-1,1,-1},{-1,1,1}};
@@ -129,28 +130,67 @@ void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_struct
     gui_param.display_field = true;
     gui_param.display_particles = true;
     gui_param.save_field = false;
+
+    //Initializing depth render target framebuffer
+    oglHelper.initializeFBO(dfbo);
+    oglHelper.initializeFBO(rfbo);
+
+    //Set the texture to be shown on screen
+    screenquad = mesh_drawable( mesh_primitive_quad(vec3(-1,-1,0),vec3(1,-1,0),vec3(1,1,0),vec3(-1,1,0)));
+    screenquad.shader = shaders["render_target"];
+    screenquad.texture_id = rfbo[1];
 }
 
-void scene_model::display(std::map<std::string,GLuint>& shaders, scene_structure& scene, gui_structure& )
-{
-    draw(borders, scene.camera);
+void scene_model::drawOn(GLuint buffer_id, GLuint shader, bool reverseDepth = false){
+  //glUseProgram(shader);
+  glBindVertexArray(billboard.data.vao); //opengl_debug();
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, billboard.data.vbo_index); //opengl_debug();
+  glBindFramebuffer(GL_FRAMEBUFFER, buffer_id);
+  if(reverseDepth){
+    glClearDepth(0.0f);
+  }else{
+    glClearDepth(1.0f);
+  }
+  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glEnable(GL_DEPTH_TEST);
+  if(reverseDepth){
+    glDepthFunc(GL_GREATER);
+  }else{
+    glDepthFunc(GL_LESS);
+  }
+  for(size_t k=0; k<particles.size(); ++k) {
+    uniform(shader, "translation", particles[k].p); //opengl_debug();
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr); //opengl_debug();
+  }
+  glDepthFunc(GL_LESS);
+  glDisable(GL_DEPTH_TEST);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); //opengl_debug();
+  glBindVertexArray(0);
+}
 
+void scene_model::display(std::map<std::string,GLuint>& shaders, scene_structure& scene, gui_structure& gui)
+{
     GLuint shader = shaders["fluid"];
     glUseProgram(shader);
+    glUniform1i(glGetUniformLocation(shader, "depth_tex_sampler"), 0);
+    glUniform1i(glGetUniformLocation(shader, "rev_depth_tex_sampler"), 1);
     uniform(shader, "rotation", scene.camera.orientation); //opengl_debug();
     uniform(shader, "scaling", sph_param.h / 3 *2); //opengl_debug();
     uniform(shader,"perspective",scene.camera.perspective.matrix()); //opengl_debug();
     uniform(shader,"view",scene.camera.view_matrix()); //opengl_debug();
     uniform(shader,"camera_position",scene.camera.camera_position()); //opengl_debug();
-    glBindVertexArray(billboard.data.vao); //opengl_debug();
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, billboard.data.vbo_index); //opengl_debug();
-    for(size_t k=0; k<particles.size(); ++k) {
-      uniform(shader, "translation", particles[k].p); //opengl_debug();
-      glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr); //opengl_debug();
-    }
-    glBindVertexArray(0);
-}
+    drawOn(dfbo[0], shader, false);
+    drawOn(rfbo[0], shader, true);
 
+    draw(borders, scene.camera);
+    glActiveTexture(GL_TEXTURE0 + 0); // Texture unit 0
+    glBindTexture(GL_TEXTURE_2D, dfbo[1]);
+    glActiveTexture(GL_TEXTURE0 + 1); // Texture unit 1
+    glBindTexture(GL_TEXTURE_2D, rfbo[1]);
+    draw(screenquad, scene.camera);
+}
 
 void scene_model::set_gui()
 {

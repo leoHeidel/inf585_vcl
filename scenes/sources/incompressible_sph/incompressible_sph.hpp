@@ -1,9 +1,10 @@
 #pragma once
 
-#include <chrono> 
+#include <chrono>
 
 #include "scenes/base/base.hpp"
 #include "opencl_helper.hpp"
+#include "opengl_helper.hpp"
 
 #ifdef INCOMPRESSIBLE_SPH
 
@@ -46,6 +47,12 @@ struct scene_model : scene_base
     float render_time;
     float total_time;
 
+    OGLHelper oglHelper;
+    GLuint dfbo[3];
+    GLuint rfbo[3];
+    GLuint tfbo[3];
+    void drawOn(GLuint buffer_id, GLuint shader, bool reverseDepth);
+
     OCLHelper oclHelper;
     void initialize_sph();
     void setup_data(std::map<std::string,GLuint>& shaders, scene_structure& scene, gui_structure& gui);
@@ -60,6 +67,7 @@ struct scene_model : scene_base
     gui_parameters gui_param;
     vcl::mesh_drawable sphere;
     vcl::mesh_drawable billboard;
+    vcl::mesh_drawable screenquad;
     vcl::segments_drawable borders;
     vcl::segments_drawable spheres;
 
