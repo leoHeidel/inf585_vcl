@@ -12,17 +12,18 @@
 // SPH simulation parameters
 struct sph_parameters
 {
-    cl_int nb_particles=4000;
-    cl_int hash_table_size=1024;
-    cl_int table_list_size=64;
-    cl_int nb_neighbors=40;
+    cl_int nb_particles=8192;
+    cl_int hash_table_size=4096;
+    cl_int table_list_size=128;
+    cl_int nb_neighbors=64;
 
     cl_float h = 0.08f;
     cl_float rho0 = 1000.0f;
     cl_float m; // rho0*h*h*h
     cl_float epsilon = 1e-3f;
-    cl_float c = 0.07;
+    cl_float c = 0.2;
     cl_float dt = 0.02f;
+    cl_float max_relative_dp = 0.08f;
 };
 
 
@@ -32,12 +33,12 @@ struct OCLHelper {
     cl_device_id device_id = NULL;
     cl_command_queue command_queue;
 
-    int nb_particles=4000;
-    int hash_table_size=1024;
-    int table_list_size=64;
-    int nb_neighbors=40;
+    int nb_particles;
+    int hash_table_size;
+    int table_list_size;
+    int nb_neighbors;
 
-    size_t local_item_size = 16;
+    size_t local_item_size = 256;
 
     cl_mem sph_param_mem;
     cl_mem p_mem;
@@ -70,11 +71,16 @@ struct OCLHelper {
     cl_kernel apply_vorticity_kernel;
     cl_kernel apply_viscosity_kernel;
 
+    float alpha_time = 0.6;
+    float nn1_time;
+    float nn2_time;
+    float nn3_time;
 
     void init_context(sph_parameters sph_param);
 
     void set_sph_param(sph_parameters sph_param);
-    void befor_solver(std::vector<vcl::vec3> positions, std::vector<vcl::vec3> v);
+    void set_p_v(std::vector<vcl::vec3> positions, std::vector<vcl::vec3> v);
+    void befor_solver();
     std::vector<vcl::vec3> get_v();
     std::vector<vcl::vec3> get_p();
     void make_neighboors();

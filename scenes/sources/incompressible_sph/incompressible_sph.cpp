@@ -27,6 +27,18 @@ void scene_model::initialize_sph()
     }
 
     oclHelper.init_context(sph_param);
+
+    std::vector<vec3> v;
+    for (auto &part : particles)
+    {
+        v.push_back(part.v);
+    }
+    std::vector<vec3> positions;
+    for (auto &part : particles)
+    {
+        positions.push_back(part.p);
+    }
+    oclHelper.set_p_v(positions,v);
 }
 
 
@@ -41,18 +53,8 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
         // Force constant time step
         size_t solverIterations = 3;
         auto last_time = std::chrono::high_resolution_clock::now();
-        std::vector<vec3> v;
-        for (auto &part : particles)
-        {
-            v.push_back(part.v);
-        }
 
-        std::vector<vec3> positions;
-        for (auto &part : particles)
-        {
-            positions.push_back(part.p);
-        }
-        oclHelper.befor_solver(positions, v);
+        oclHelper.befor_solver();
 
         auto current_time = std::chrono::high_resolution_clock::now();
         pre_solver_time = alpha_time*pre_solver_time + (1-alpha_time)*std::chrono::duration_cast<std::chrono::milliseconds>(current_time-last_time).count();
@@ -75,19 +77,12 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
         last_time = current_time;
 
         oclHelper.update_speed();
-
+        
         std::vector<vcl::vec3> p_gpu = oclHelper.get_p();
         for (size_t i = 0; i < particles.size(); i++)
         {
             particles[i].p = p_gpu[i];
         }
-
-        std::vector<vcl::vec3> v_gpu = oclHelper.get_v();
-        for (size_t i = 0; i < particles.size(); i++)
-        {
-            particles[i].v = v_gpu[i];
-        }
-
         current_time = std::chrono::high_resolution_clock::now();
         post_solver_time = alpha_time*post_solver_time + (1-alpha_time)*std::chrono::duration_cast<std::chrono::milliseconds>(current_time-last_time).count();
         last_time = current_time;
@@ -104,6 +99,7 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
     if (! ((count + 1) % 100)) {
         std::cout << "pre solver time: " << pre_solver_time << std::endl;
         std::cout << "neigbors time: " << neighboors_time << std::endl;
+        std::cout << "neigbors sub times: " << oclHelper.nn1_time << " " << oclHelper.nn2_time << " " << oclHelper.nn3_time << std::endl;
         std::cout << "solver time: " << solver_time << std::endl;
         std::cout << "post solver time: " << post_solver_time << std::endl;
         std::cout << "render time: " << render_time << std::endl;

@@ -49,7 +49,7 @@ void draw(const mesh_drawable& drawable, const camera_scene& camera, GLuint shad
         return ;
 
     // Check that the shader is a valid one
-    if( glIsProgram(shader)==GL_FALSE ) {
+    if(glIsProgram(shader)==GL_FALSE ) {
         std::cout<<"No valid shader set to display mesh: skip display"<<std::endl;
         return;
     }
