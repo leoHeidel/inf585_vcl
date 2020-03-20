@@ -38,7 +38,7 @@ struct scene_model : scene_base
 {
     int count = 0;
 
-    float alpha_time = 0.97;
+    float alpha_time = 0.6;
     float pre_solver_time;
     float neighboors_time;
     float solver_time;

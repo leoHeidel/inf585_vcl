@@ -3,6 +3,8 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <chrono> 
+
 
 using namespace vcl;
 
@@ -199,23 +201,40 @@ void OCLHelper::set_sph_param(sph_parameters sph_param){
 
 
 void OCLHelper::make_neighboors(){
-      cl_int zero = 0;
+    cl_int zero = 0;
+   
+    auto t1 = std::chrono::high_resolution_clock::now();
+    
     cl_int ret = clEnqueueFillBuffer(command_queue, table_count_mem, &zero, sizeof(zero), 0, sizeof(cl_int) * hash_table_size, 0, NULL, NULL);
     ret = clEnqueueFillBuffer(command_queue, n_neighbors_mem, &zero, sizeof(zero), 0, sizeof(cl_int) * nb_particles, 0, NULL, NULL);
 
     cl_event  barrier;
     ret = clEnqueueBarrierWithWaitList(command_queue, 0, NULL, &barrier);
 
-    // Execute the OpenCL kernel on the list
     size_t global_item_size = nb_particles;
     cl_event  last_kernel;
+
+    clFinish(command_queue);
+    auto t2 = std::chrono::high_resolution_clock::now();
+
+
     ret = clEnqueueNDRangeKernel(command_queue, fill_hashmap_kernel, 1, NULL,
             &global_item_size, &local_item_size, 1, &barrier, &last_kernel);
+
+    clFinish(command_queue);
+    auto t3 = std::chrono::high_resolution_clock::now();
+
+
     ret = clEnqueueNDRangeKernel(command_queue, find_neighbors_kernel, 1, NULL,
             &global_item_size, &local_item_size, 1, &last_kernel, NULL);
     
 
     clFinish(command_queue);
+    auto t4 = std::chrono::high_resolution_clock::now();
+
+    nn1_time = alpha_time*nn1_time + (1-alpha_time)*std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
+    nn2_time = alpha_time*nn2_time + (1-alpha_time)*std::chrono::duration_cast<std::chrono::milliseconds>(t3-t2).count();
+    nn3_time = alpha_time*nn3_time + (1-alpha_time)*std::chrono::duration_cast<std::chrono::milliseconds>(t4-t3).count();
 }
 
 void OCLHelper::solver_step(){
@@ -288,7 +307,7 @@ std::vector<vcl::vec3> OCLHelper::get_p(){
 }
 
 
-void OCLHelper::befor_solver(std::vector<vec3> positions, std::vector<vec3> v){
+void OCLHelper::set_p_v(std::vector<vec3> positions, std::vector<vec3> v){
     cl_float3* positions_array = (cl_float3*)malloc(sizeof(cl_float3)*nb_particles);
     for (int i = 0; i < nb_particles; i++)
     {
@@ -299,7 +318,6 @@ void OCLHelper::befor_solver(std::vector<vec3> positions, std::vector<vec3> v){
     cl_int ret;
     ret = clEnqueueWriteBuffer(command_queue, p_mem, CL_TRUE, 0, nb_particles * sizeof(cl_float3), positions_array, 0, NULL, NULL);
 
-
     cl_float3* v_array = (cl_float3*)malloc(sizeof(cl_float3)*nb_particles);
     for (int i = 0; i < nb_particles; i++)
     {
@@ -308,16 +326,16 @@ void OCLHelper::befor_solver(std::vector<vec3> positions, std::vector<vec3> v){
         v_array[i].s[2] = v[i].z;
     }
     ret = clEnqueueWriteBuffer(command_queue, v_mem, CL_TRUE, 0, nb_particles * sizeof(cl_float3), v_array, 0, NULL, NULL);
+    free (v_array);
+    free(positions_array);
+}
+void OCLHelper::befor_solver(){
     cl_event  barrier;
+    cl_int ret;
     ret = clEnqueueBarrierWithWaitList(command_queue, 0, NULL, &barrier);
     size_t global_item_size = nb_particles;
     ret = clEnqueueNDRangeKernel(command_queue, befor_solver_kernel, 1, NULL,
             &global_item_size, &local_item_size, 1, &barrier, NULL);
-
-    free (v_array);
-    free(positions_array);
-    
-
     clFinish(command_queue);
 }
 

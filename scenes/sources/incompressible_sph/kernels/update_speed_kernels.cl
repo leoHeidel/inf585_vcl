@@ -10,6 +10,7 @@ struct sph_parameters {
     float epsilon;
     float c;
     float dt;
+    float max_relative_dp;
 };
 
 

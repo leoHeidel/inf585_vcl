@@ -10,6 +10,7 @@ struct sph_parameters {
     float epsilon;
     float c;
     float dt;
+    float max_relative_dp;
 };
 
 
@@ -37,10 +38,13 @@ __kernel void find_neighbors(__global const struct sph_parameters* param, __glob
     int x = floor(p[i].x/param->h);
     int y = floor(p[i].y/param->h);
     int z = floor(p[i].z/param->h);
-    char count = 0;
-    for(char dx = -1; dx<2;dx++) {
-        for(char dy = -1; dy<2;dy++) {
-            for(char dz = -1; dz<2;dz++) {
+    int count = 0;
+    #pragma unroll 3
+    for(int dx = -1; dx<2;dx++) {
+        #pragma unroll 3
+        for(int dy = -1; dy<2;dy++) {
+            #pragma unroll 3
+            for(int dz = -1; dz<2;dz++) {
                 int idx = hash(x+dx, y+dy, z+dz) % param->hash_table_size;
                 int n = min(table_count[idx], param->table_list_size);
                 for (char d_idx = 0; d_idx < n; d_idx++) {

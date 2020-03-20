@@ -10,6 +10,7 @@ struct sph_parameters {
     float epsilon;
     float c;
     float dt;
+    float max_relative_dp;
 };
 
 
@@ -74,9 +75,8 @@ __kernel void compute_dp(__global const struct sph_parameters* param, __global c
     dp[i] += (lambda[i] + lambda[j] + s) * gradW(param->h, q[i] - q[j]); // homogeneous h^-2;
   }
   dp[i] *= param->m / param->rho0;
-  float coef = 0.1;
   float d = length(dp[i]);
-  d = d < param->h * coef ? 1 : d / (param->h * coef) ;
+  d = d < param->h * param->max_relative_dp ? 1 : d / (param->h * param->max_relative_dp) ;
   dp[i] /= d;
 }
 
