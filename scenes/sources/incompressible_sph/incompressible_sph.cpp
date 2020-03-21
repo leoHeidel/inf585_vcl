@@ -200,11 +200,11 @@ void scene_model::set_gui()
     // Can set the speed of the animation
     float scale_min = 0.05f;
     float scale_max = 2.0f;
-    ImGui::SliderScalar("Time scale", ImGuiDataType_Float, &timer.scale, &scale_min, &scale_max, "%.2f s");
+    // ImGui::SliderScalar("Time scale", ImGuiDataType_Float, &timer.scale, &scale_min, &scale_max, "%.2f s");
 
-    ImGui::Checkbox("Display field", &gui_param.display_field);
-    ImGui::Checkbox("Display particles", &gui_param.display_particles);
-    ImGui::Checkbox("Save field on disk", &gui_param.save_field);
+    // ImGui::Checkbox("Display field", &gui_param.display_field);
+    // ImGui::Checkbox("Display particles", &gui_param.display_particles);
+    // ImGui::Checkbox("Save field on disk", &gui_param.save_field);
 
     // Start and stop animation
     if (ImGui::Button("Stop"))

@@ -48,7 +48,7 @@ float3 gradW(float h, float3 p){
 __kernel void compute_constraints(__global const struct sph_parameters* param, __global const float3 *q, __global const int *neighbors,
       __global const int *n_neighbors, __global float *lambda) {
   int i = get_global_id(0);
-  int n = min(param->nb_neighbors, n_neighbors[i]);
+  int n = min(param->nb_neighbors-1, n_neighbors[i]);
   float rho = 0.f;
   float3 ci= {0.f,0.f,0.f};
   float sum = 0.f;
@@ -68,7 +68,7 @@ __kernel void compute_constraints(__global const struct sph_parameters* param, _
 __kernel void compute_dp(__global const struct sph_parameters* param, __global const float3 *q, __global const int *neighbors,
       __global const int *n_neighbors, __global const float *lambda, __global float3 *dp){
   int i = get_global_id(0);
-  int n = min(param->nb_neighbors, n_neighbors[i]);
+  int n = min(param->nb_neighbors-1, n_neighbors[i]);
   float3 zero = {0.f,0.f,0.f};
   dp[i] = zero;
   for (int j_idx = 0; j_idx < n; j_idx++) {

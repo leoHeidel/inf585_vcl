@@ -14,8 +14,8 @@ struct sph_parameters
 {
     cl_int nb_particles=8192;
     cl_int hash_table_size=4096;
-    cl_int table_list_size=128;
-    cl_int nb_neighbors=64;
+    cl_int table_list_size=100;
+    cl_int nb_neighbors=50;
 
     cl_float h = 0.06f;
     cl_float rho0 = 1000.0f;

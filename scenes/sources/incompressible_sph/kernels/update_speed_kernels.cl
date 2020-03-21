@@ -61,7 +61,7 @@ __kernel void update_position_speed(__global const struct sph_parameters* param,
 __kernel void update_w(__global const struct sph_parameters* param, __global const float3 *p, __global const int *neighbors, __global const int *n_neighbors, __global const float3 *v_copy, __global float3 *w){
     int i = get_global_id(0);
     w[i] = float3(0.f, 0.f, 0.f);
-    int n = min(param->nb_neighbors, n_neighbors[i]);
+    int n = min(param->nb_neighbors-1, n_neighbors[i]);
     for (int j_idx=0; j_idx < n; j_idx++) {
         int j = neighbors[param->nb_neighbors * i + j_idx];
         w[i] += - param->m * cross(v_copy[j]-v_copy[i], gradW(param->h,p[i]-p[j]));
@@ -70,7 +70,7 @@ __kernel void update_w(__global const struct sph_parameters* param, __global con
 
 __kernel void apply_vorticity(__global const struct sph_parameters* param, __global const float3 *p,  __global const int *neighbors, __global const int *n_neighbors, __global float3 *v_copy, __global const float3 *w){
     int i = get_global_id(0);
-    int n = min(param->nb_neighbors, n_neighbors[i]);
+    int n = min(param->nb_neighbors-1, n_neighbors[i]);
     float3 eta = float3(0.f, 0.f, 0.f);
     for (int j_idx=0; j_idx < n; j_idx++) {
         int j = neighbors[param->nb_neighbors * i + j_idx];
@@ -83,7 +83,7 @@ __kernel void apply_vorticity(__global const struct sph_parameters* param, __glo
 __kernel void apply_viscosity(__global const struct sph_parameters* param, __global const float3 *p, __global const int *neighbors, __global const int *n_neighbors, __global const float3 *v_copy, __global float3 *v){
     int i = get_global_id(0);
     float alpha = 0;
-    int n = min(param->nb_neighbors, n_neighbors[i]);
+    int n = min(param->nb_neighbors-1, n_neighbors[i]);
     float3 zero = {0.f,0.f,0.f};
     v[i] = zero;
     for (int j_idx=0; j_idx < n; j_idx++) {

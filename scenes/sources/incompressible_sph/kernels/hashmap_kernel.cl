@@ -53,13 +53,13 @@ __kernel void find_neighbors(__global const struct sph_parameters* param, __glob
             #pragma unroll 3
             for(int dz = -1; dz<2;dz++) {
                 int idx = hash(x+dx, y+dy, z+dz) % param->hash_table_size;
-                int n = min(table_count[idx], param->table_list_size);
+                int n = min(table_count[idx], param->table_list_size - 1);
                 for (char d_idx = 0; d_idx < n; d_idx++) {
                     int j = table[idx*param->table_list_size + d_idx];
                     float3 dp = p[i] - p[j];
                     float dij2 = dp.x*dp.x + dp.y*dp.y + dp.z*dp.z;
                     if (dij2 < param->h*param->h && i!=j) {
-                        neighbors[i*param->nb_neighbors + count] =j;
+                        neighbors[i*param->nb_neighbors + min(count, param->nb_neighbors-1)] =j;
                         count++;
                     }
                 }
