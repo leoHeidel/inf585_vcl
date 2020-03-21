@@ -11,6 +11,9 @@ struct sph_parameters {
     float c;
     float dt;
     float max_relative_dp;
+    float gx;
+    float gy;
+    float gz;
 };
 
 
