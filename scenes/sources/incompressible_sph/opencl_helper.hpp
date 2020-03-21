@@ -17,7 +17,7 @@ struct sph_parameters
     cl_int table_list_size=128;
     cl_int nb_neighbors=64;
 
-    cl_float h = 0.08f;
+    cl_float h = 0.06f;
     cl_float rho0 = 1000.0f;
     cl_float m; // rho0*h*h*h
     cl_float epsilon = 1e-3f;
@@ -38,7 +38,7 @@ struct OCLHelper {
     int table_list_size;
     int nb_neighbors;
 
-    size_t local_item_size = 256;
+    size_t local_item_size = 128;
 
     cl_mem sph_param_mem;
     cl_mem p_mem;

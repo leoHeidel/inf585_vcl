@@ -33,6 +33,10 @@ __kernel void fill_hashmap(__global const struct sph_parameters* param, __global
     table[idx * param->table_list_size + min(delta, param->table_list_size-1)] = i;
 }
 
+
+
+
+
 __kernel void find_neighbors(__global const struct sph_parameters* param, __global const float3 *p, __global const int *table,  __global const int *table_count, __global int *neighbors, __global int *n_neighbors) {
     int i = get_global_id(0);
     int x = floor(p[i].x/param->h);
@@ -61,3 +65,45 @@ __kernel void find_neighbors(__global const struct sph_parameters* param, __glob
     }
     n_neighbors[i] = count;
 }
+
+
+
+
+
+
+
+
+
+
+// __kernel void find_neighbors(__global const struct sph_parameters* param, __global const float3 *p, __global const int *table,  __global const int *table_count, __global int *neighbors, __global int *n_neighbors) {
+//     int i = get_global_id(0);
+//     int x = floor(p[i].x/param->h)-1;
+//     int y = floor(p[i].y/param->h)-1;
+//     int z = floor(p[i].z/param->h)-1;
+//     int count = 0;
+
+//     int idx[27];
+//     int nb[27];
+
+//     #pragma unroll 27
+//     for (int k = 0; k < 27; k++){
+//         idx[k] = hash(x+ (k%3), y + ((k / 3)%3) , z + ((k / 9)%3)) % param->hash_table_size;
+//         nb[k] = min(table_count[idx[k]], param->table_list_size);
+//     }
+
+
+//     #pragma unroll 27
+//     for (int k = 0; k < 27; k++){
+//         for (int d_idx = 0; d_idx < nb[k]; d_idx++){
+//             int j = table[idx[k]*param->table_list_size + d_idx];
+//             float3 dp = p[i] - p[j];
+//             float dij2 = dp.x*dp.x + dp.y*dp.y + dp.z*dp.z;
+//             if (dij2 < param->h*param->h && i!=j) {
+//                         neighbors[i*param->nb_neighbors + count] =j;
+//                         count++;
+//             }
+//         }
+//     }
+//     n_neighbors[i] = count;
+// }
+

@@ -16,7 +16,7 @@ void scene_model::initialize_sph()
     std::default_random_engine generator;
     std::normal_distribution<float> normal(0,1);
 
-    sph_param.m = sph_param.rho0*sph_param.h*sph_param.h*sph_param.h;
+    sph_param.m = sph_param.rho0*sph_param.h*sph_param.h*sph_param.h * 2;
 
     for (size_t i = 0; i < sph_param.nb_particles; i++)
     {

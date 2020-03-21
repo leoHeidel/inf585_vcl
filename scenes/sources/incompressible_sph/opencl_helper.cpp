@@ -201,10 +201,9 @@ void OCLHelper::set_sph_param(sph_parameters sph_param){
 
 
 void OCLHelper::make_neighboors(){
-    cl_int zero = 0;
-   
     auto t1 = std::chrono::high_resolution_clock::now();
     
+    cl_int zero = 0;
     cl_int ret = clEnqueueFillBuffer(command_queue, table_count_mem, &zero, sizeof(zero), 0, sizeof(cl_int) * hash_table_size, 0, NULL, NULL);
     ret = clEnqueueFillBuffer(command_queue, n_neighbors_mem, &zero, sizeof(zero), 0, sizeof(cl_int) * nb_particles, 0, NULL, NULL);
 

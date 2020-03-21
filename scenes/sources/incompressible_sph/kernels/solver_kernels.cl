@@ -20,10 +20,10 @@ float3 gradW(float h, float3 p);
 float W(float h, float3 p){
     float d = length(p);
     if(d<=h){
-        float C = 315./(64.*3.1415926535*pow(h,3.));
+        float C = 315./(64.*3.1415926535*pow(h,3.f));
         float a = d/h;
         float b = 1-a*a;
-        return C*pow(b,3.);
+        return C*pow(b,3.f);
     }
     return 0.f;
 }
