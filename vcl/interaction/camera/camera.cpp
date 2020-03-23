@@ -160,7 +160,8 @@ void camera_scene::apply_rotation(float x0, float y0, float x1, float y1)
 void camera_scene::apply_scaling(float s)
 {
     scale *= (1.0f+s);
-    scale = std::max(scale, 0.01f);
+    scale = std::min(std::max(scale, 0.01f), 5.2f); // 4.8 - 5.2
+    std::cout<<"new scale: "<<scale<<std::endl;
 }
 
 vec3 camera_scene::camera_position() const

@@ -31,7 +31,7 @@ enum camera_control_type {camera_control_trackball, camera_control_spherical_coo
 struct camera_scene
 {
     /** Base distance between camera and (0,0,0) along z-direction */
-    static constexpr float scale0 = 3.0f;
+    static constexpr float scale0 = 5.0f;
 
     float scale      = scale0;
     vec3 translation = {};

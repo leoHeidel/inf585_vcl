@@ -32,6 +32,7 @@ struct gui_parameters
     bool display_field;
     bool display_particles;
     bool save_field;
+    bool world_space_gravity;
 };
 
 
@@ -48,9 +49,10 @@ struct scene_model : scene_base
     float total_time;
 
     OGLHelper oglHelper;
-    GLuint dfbo[3];
-    GLuint rfbo[3];
-    GLuint tfbo[3];
+    GLuint dfbo[3]; //depth texture
+    GLuint rfbo[3]; //reverse depth texture
+    GLuint sdfbo[3]; //smoothed depth texture
+    GLuint srfbo[3]; //smoothed reverse depth texture
     void drawOn(GLuint buffer_id, GLuint shader, bool reverseDepth);
 
     OCLHelper oclHelper;

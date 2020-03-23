@@ -19,23 +19,43 @@ uniform float ambiant  = 0.2;
 uniform float diffuse  = 0.8;
 uniform float specular = 0.5;
 uniform int specular_exponent = 128;
+uniform float radius;
 
-vec3 light = vec3(camera_position.x, camera_position.y, camera_position.z);
+// model transformation
+uniform vec3 translation = vec3(0.0, 0.0, 0.0);                      // user defined translation
+uniform mat3 rotation = mat3(1.0,0.0,0.0, 0.0,1.0,0.0, 0.0,0.0,1.0); // user defined rotation
+uniform float scaling = 1.0;                                         // user defined scaling
+uniform vec3 scaling_axis = vec3(1.0,1.0,1.0);                       // user defined scaling
 
-float near = 0.01;
-float far  = 5.0;
+// view transform
+uniform mat4 view;
+// perspective matrix
+uniform mat4 perspective;
+
+float near = 3.0;
+float far  = 10.0;
+
+vec3 light = rotation*vec3(2.0, 2.0, 2.0);
+
+
 
 float LinearizeDepth(float depth)
 {
-    float z = depth * 2.0 - 1.0; // back to NDC
-    return (2.0 * near * far) / (far + near - z * (far - near));
-    //return (z-near)/(far-near) + near;
+    float z = - depth;
+    return (z - near)/(far - near);
 }
 
 void main()
 {
-    if(length(fragment.texture_uv.xy - vec2(0.5)) < 0.53){
-      float depth = LinearizeDepth(gl_FragCoord.z) / far;
+    vec3 N;
+    N.xy = 2.0*fragment.texture_uv.xy - 1.0;
+    if(length(N.xy) < 1.0){
+      N.z = sqrt(1.0 - dot(N.xy, N.xy));
+      vec4 pixelPos = vec4(fragment.position.xyz + N*0.06, 1.0);
+      vec4 viewSpacePos = view * pixelPos;
+      float diffuse = max(0.0, dot(normalize(light - fragment.position.xyz),rotation*N));
+      float viewDepth = viewSpacePos.z / viewSpacePos.w;
+      float depth = LinearizeDepth(viewDepth);
       FragColor = vec4(vec3(depth), 1.0);
     }else{
       discard;

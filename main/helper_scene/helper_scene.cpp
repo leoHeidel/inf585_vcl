@@ -56,6 +56,7 @@ void load_shaders(std::map<std::string,GLuint>& shaders)
     shaders["normals"] = create_shader_program("scenes/shared_assets/shaders/normals/shader.vert.glsl","scenes/shared_assets/shaders/normals/shader.geom.glsl","scenes/shared_assets/shaders/normals/shader.frag.glsl");
     shaders["fluid"] = create_shader_program("scenes/shared_assets/shaders/fluid/shader.vert.glsl","scenes/shared_assets/shaders/fluid/shader.frag.glsl");
     shaders["render_target"] = create_shader_program("scenes/shared_assets/shaders/render_target/shader.vert.glsl","scenes/shared_assets/shaders/render_target/shader.frag.glsl");
+    shaders["blur"] = create_shader_program("scenes/shared_assets/shaders/blur/shader.vert.glsl","scenes/shared_assets/shaders/blur/shader.frag.glsl");
 
 
     std::cout<<"\t [OK] Shader loaded"<<std::endl;

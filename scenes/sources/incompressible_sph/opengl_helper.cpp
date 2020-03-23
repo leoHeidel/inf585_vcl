@@ -6,13 +6,17 @@
 
 using namespace vcl;
 
-void OGLHelper::initializeFBO(GLuint fbo[3], size_t width, size_t height){
+void OGLHelper::initializeFBO(GLuint fbo[3], bool highResolution, size_t width, size_t height){
   glGenFramebuffers(1, &fbo[0]);
   glBindFramebuffer(GL_FRAMEBUFFER, fbo[0]);
 
   glGenTextures(1, &fbo[1]);
   glBindTexture(GL_TEXTURE_2D, fbo[1]);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  if(highResolution){
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+  }else{
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  }
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glBindTexture(GL_TEXTURE_2D, 0);

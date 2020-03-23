@@ -77,7 +77,7 @@ __kernel void apply_vorticity(__global const struct sph_parameters* param, __glo
         eta += (length(w[j])-length(w[i]))/(length(p[j]-p[i])*length(p[j]-p[i]))*(p[j]-p[i]);
     }
     eta = normalize(eta);
-    v_copy[i] += param->dt*param->h*0.003f*cross(eta,w[i]); //0.004 is maximum for stable
+    v_copy[i] += param->dt*param->h*0.001f*cross(eta,w[i]); //0.004 is maximum for stable
 }
 
 __kernel void apply_viscosity(__global const struct sph_parameters* param, __global const float3 *p, __global const int *neighbors, __global const int *n_neighbors, __global const float3 *v_copy, __global float3 *v){
@@ -92,6 +92,6 @@ __kernel void apply_viscosity(__global const struct sph_parameters* param, __glo
         v[i] += dalpha* v_copy[j];
         alpha += dalpha;
     }
-    alpha = min(1.f,alpha);
+    //alpha = min(1.f,alpha);
     v[i] += (1-alpha) * v_copy[i];
 }

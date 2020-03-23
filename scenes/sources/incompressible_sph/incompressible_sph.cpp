@@ -16,7 +16,7 @@ void scene_model::initialize_sph()
     std::default_random_engine generator;
     std::normal_distribution<float> normal(0,1);
 
-    sph_param.m = sph_param.rho0*sph_param.h*sph_param.h*sph_param.h * 2;
+    sph_param.m = sph_param.rho0*sph_param.h*sph_param.h*sph_param.h;
 
     for (size_t i = 0; i < sph_param.nb_particles; i++)
     {
@@ -53,10 +53,17 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
         // Force constant time step
         size_t solverIterations = 3;
         auto last_time = std::chrono::high_resolution_clock::now();
-        sph_param.gx = (scene.camera.orientation*vec3(0.0f, -100.0*sph_param.h, 0.0f)).x;
-        sph_param.gy = (scene.camera.orientation*vec3(0.0f, -100.0*sph_param.h, 0.0f)).y;
-        sph_param.gz = (scene.camera.orientation*vec3(0.0f, -100.0*sph_param.h, 0.0f)).z;
-        oclHelper.set_sph_param(sph_param);
+        if(gui_param.world_space_gravity){
+          sph_param.gx = (scene.camera.orientation*vec3(0.0f, -100.0*sph_param.h, 0.0f)).x;
+          sph_param.gy = (scene.camera.orientation*vec3(0.0f, -100.0*sph_param.h, 0.0f)).y;
+          sph_param.gz = (scene.camera.orientation*vec3(0.0f, -100.0*sph_param.h, 0.0f)).z;
+          oclHelper.set_sph_param(sph_param);
+        }else{
+          sph_param.gx = (vec3(0.0f, -100.0*sph_param.h, 0.0f)).x;
+          sph_param.gy = (vec3(0.0f, -100.0*sph_param.h, 0.0f)).y;
+          sph_param.gz = (vec3(0.0f, -100.0*sph_param.h, 0.0f)).z;
+          oclHelper.set_sph_param(sph_param);
+        }
         oclHelper.befor_solver();
 
         auto current_time = std::chrono::high_resolution_clock::now();
@@ -129,10 +136,13 @@ void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_struct
     gui_param.display_field = true;
     gui_param.display_particles = true;
     gui_param.save_field = false;
+    gui_param.world_space_gravity = false;
 
     //Initializing depth render target framebuffer
-    oglHelper.initializeFBO(dfbo);
-    oglHelper.initializeFBO(rfbo);
+    oglHelper.initializeFBO(dfbo, true);
+    oglHelper.initializeFBO(rfbo, true);
+    oglHelper.initializeFBO(sdfbo, true);
+    oglHelper.initializeFBO(srfbo, true);
 
     //Set the texture to be shown on screen
     screenquad = mesh_drawable( mesh_primitive_quad(vec3(-1,-1,0),vec3(1,-1,0),vec3(1,1,0),vec3(-1,1,0)));
@@ -174,25 +184,61 @@ void scene_model::display(std::map<std::string,GLuint>& shaders, scene_structure
     GLuint shader = shaders["fluid"];
     glUseProgram(shader);
     uniform(shader, "rotation", scene.camera.orientation); //opengl_debug();
-    uniform(shader, "scaling", sph_param.h / 3 *2); //opengl_debug();
+    uniform(shader, "scaling", sph_param.h); //opengl_debug();
     uniform(shader,"perspective",scene.camera.perspective.matrix()); //opengl_debug();
     uniform(shader,"view",scene.camera.view_matrix()); //opengl_debug();
     uniform(shader,"camera_position",scene.camera.camera_position()); //opengl_debug();
+    uniform(shader,"color",vec3(0.1, 0.4, 0.8)); //opengl_debug();
+    uniform(shader,"radius",sph_param.h); //opengl_debug();
     drawOn(dfbo[0], shader, false);
     drawOn(rfbo[0], shader, true);
-
     draw(borders, scene.camera);
-    glUseProgram(screenquad.shader);
-    glUniform1i(glGetUniformLocation(screenquad.shader, "depth_tex_sampler"), 0);
-    glUniform1i(glGetUniformLocation(screenquad.shader, "rev_depth_tex_sampler"), 1);
+
+    //give depth texture to blur shader (rendering to render target sdfbo)
+    shader = shaders["blur"];
+    glUseProgram(shader);
+    glBindVertexArray(screenquad.data.vao); //opengl_debug();
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, screenquad.data.vbo_index); //opengl_debug();
+
+    glBindFramebuffer(GL_FRAMEBUFFER, sdfbo[0]); //drawing to render target sdfbo
+    glUniform1i(glGetUniformLocation(shader, "depth_tex_sampler"), 0);
     glActiveTexture(GL_TEXTURE0 + 0); // Texture unit 0
-    glBindTexture(GL_TEXTURE_2D, dfbo[1]);
+    glBindTexture(GL_TEXTURE_2D, dfbo[1]); //sending dfbo[1] as uniform sampler2D to shader
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr); //opengl_debug(); //draw quad to render target
+    glDisable(GL_BLEND);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, srfbo[0]); //drawing to render target sdfbo
+    glUniform1i(glGetUniformLocation(shader, "depth_tex_sampler"), 0);
+    glActiveTexture(GL_TEXTURE0 + 0); // Texture unit 0
+    glBindTexture(GL_TEXTURE_2D, rfbo[1]); //sending rfbo[1] as uniform sampler2D to shader
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr); //opengl_debug(); //draw quad to render target
+    glDisable(GL_BLEND);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); //opengl_debug();
+    glBindVertexArray(0);
+
+    //give depth texture and reverse depth texture to screenquad's shader (rendering a quad on screen)
+    shader = screenquad.shader; // = shaders['render target']
+    glUseProgram(shader);
+    uniform(shader, "rotation", scene.camera.orientation); //opengl_debug();
+    uniform(shader,"color",vec3(0.3, 0.5, 0.8)); //opengl_debug();
+    glUniform1i(glGetUniformLocation(shader, "depth_tex_sampler"), 0);
+    glUniform1i(glGetUniformLocation(shader, "rev_depth_tex_sampler"), 1);
+    glActiveTexture(GL_TEXTURE0 + 0); // Texture unit 0
+    glBindTexture(GL_TEXTURE_2D, sdfbo[1]);
     glActiveTexture(GL_TEXTURE0 + 1); // Texture unit 1
-    glBindTexture(GL_TEXTURE_2D, rfbo[1]);
+    glBindTexture(GL_TEXTURE_2D, srfbo[1]);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     draw(screenquad, scene.camera);
     glDisable(GL_BLEND);
+
+
 }
 
 void scene_model::set_gui()
@@ -205,6 +251,7 @@ void scene_model::set_gui()
     // ImGui::Checkbox("Display field", &gui_param.display_field);
     // ImGui::Checkbox("Display particles", &gui_param.display_particles);
     // ImGui::Checkbox("Save field on disk", &gui_param.save_field);
+    ImGui::Checkbox("World Space Gravity", &gui_param.world_space_gravity);
 
     // Start and stop animation
     if (ImGui::Button("Stop"))

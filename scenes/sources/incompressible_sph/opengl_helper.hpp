@@ -11,7 +11,7 @@
 
 struct OGLHelper {
 
-  void initializeFBO(GLuint fbo[3], size_t width = 2560, size_t height = 2000);
+  void initializeFBO(GLuint fbo[3], bool highResolution = false, size_t width = 2560, size_t height = 2000);
 
   void drawOn(GLuint buffer_id, GLuint shader, bool reverseDepth);
 
