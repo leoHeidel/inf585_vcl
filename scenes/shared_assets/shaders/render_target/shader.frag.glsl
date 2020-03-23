@@ -78,5 +78,5 @@ void main()
     float ar = exp(-10.0*(length(thickness - depth.xyz)));
     float ag = exp(-4.0*(length(thickness - depth.xyz)));
     float ab = exp(-2.0*(length(thickness - depth.xyz)));
-    FragColor = vec4(vec3(fresnel * 0.1 + specular_value) + vec3(ar, ag, ab), depth.x == 1.0 ? 0.0 : 1.0);
+    FragColor = vec4(vec3(fresnel * 0.1 + specular_value) + vec3(ar, ag, ab), 1.2 - depth.x);
 }

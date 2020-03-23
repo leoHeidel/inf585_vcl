@@ -147,7 +147,6 @@ void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_struct
     //Set the texture to be shown on screen
     screenquad = mesh_drawable( mesh_primitive_quad(vec3(-1,-1,0),vec3(1,-1,0),vec3(1,1,0),vec3(-1,1,0)));
     screenquad.shader = shaders["render_target"];
-    //screenquad.texture_id = rfbo[1];
 }
 
 void scene_model::drawOn(GLuint buffer_id, GLuint shader, bool reverseDepth = false){
@@ -181,7 +180,8 @@ void scene_model::drawOn(GLuint buffer_id, GLuint shader, bool reverseDepth = fa
 
 void scene_model::display(std::map<std::string,GLuint>& shaders, scene_structure& scene, gui_structure& gui)
 {
-    GLuint shader = shaders["fluid"];
+    //draw particles' depth to buffer dfbo
+    GLuint shader = shaders["depth"];
     glUseProgram(shader);
     uniform(shader, "rotation", scene.camera.orientation); //opengl_debug();
     uniform(shader, "scaling", sph_param.h); //opengl_debug();
@@ -191,6 +191,21 @@ void scene_model::display(std::map<std::string,GLuint>& shaders, scene_structure
     uniform(shader,"color",vec3(0.1, 0.4, 0.8)); //opengl_debug();
     uniform(shader,"radius",sph_param.h); //opengl_debug();
     drawOn(dfbo[0], shader, false);
+    draw(borders, scene.camera);
+
+    //draw particles' second depth to buffer rfbo
+    shader = shaders["thickness"];
+    glUseProgram(shader);
+    uniform(shader, "rotation", scene.camera.orientation); //opengl_debug();
+    uniform(shader, "scaling", sph_param.h); //opengl_debug();
+    uniform(shader,"perspective",scene.camera.perspective.matrix()); //opengl_debug();
+    uniform(shader,"view",scene.camera.view_matrix()); //opengl_debug();
+    uniform(shader,"camera_position",scene.camera.camera_position()); //opengl_debug();
+    uniform(shader,"color",vec3(0.1, 0.4, 0.8)); //opengl_debug();
+    uniform(shader,"radius",sph_param.h); //opengl_debug();
+    glUniform1i(glGetUniformLocation(shader, "depth_tex"), 0);
+    glActiveTexture(GL_TEXTURE0 + 0); // Texture unit 0
+    glBindTexture(GL_TEXTURE_2D, dfbo[1]); //sending dfbo[1] as uniform sampler2D to shader
     drawOn(rfbo[0], shader, true);
     draw(borders, scene.camera);
 
@@ -241,16 +256,13 @@ void scene_model::display(std::map<std::string,GLuint>& shaders, scene_structure
 
 }
 
+
+
 void scene_model::set_gui()
 {
     // Can set the speed of the animation
-    float scale_min = 0.05f;
-    float scale_max = 2.0f;
     // ImGui::SliderScalar("Time scale", ImGuiDataType_Float, &timer.scale, &scale_min, &scale_max, "%.2f s");
 
-    // ImGui::Checkbox("Display field", &gui_param.display_field);
-    // ImGui::Checkbox("Display particles", &gui_param.display_particles);
-    // ImGui::Checkbox("Save field on disk", &gui_param.save_field);
     ImGui::Checkbox("World Space Gravity", &gui_param.world_space_gravity);
 
     // Start and stop animation
