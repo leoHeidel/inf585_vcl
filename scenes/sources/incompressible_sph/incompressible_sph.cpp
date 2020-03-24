@@ -49,7 +49,7 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
         set_gui();
 
         // Force constant time step
-        size_t solverIterations = 3;
+        size_t solverIterations = 5;
         auto last_time = std::chrono::high_resolution_clock::now();
 
         // Setting gravity direction depending on option
