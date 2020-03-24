@@ -144,7 +144,7 @@ void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_struct
     gui_param.display_particles = true;
     gui_param.save_field = false;
     gui_param.world_space_gravity = false;
-    gui_param.advanced_shading = false;
+    gui_param.advanced_shading = true;
 
     //Initializing render target framebuffers
     oglHelper.initializeFBO(dfbo, true);
@@ -162,8 +162,8 @@ void scene_model::display(std::map<std::string,GLuint>& shaders, scene_structure
 {
     if(gui_param.advanced_shading){
       //draw particles depth/reverse depth to render target textures
-      draw_depth_buffer(shaders["depth"], dfbo, scene, false); //draw particles' depth to buffer dfbo
-      draw_depth_buffer(shaders["thickness"], rfbo, scene, true); //draw particles' reverse depth to buffer rfbo
+      draw_depth_buffer(shaders["depth"], dfbo, scene); //draw particles' depth to buffer dfbo
+      draw_thickness_buffer(shaders["thickness"], rfbo, scene); //draw particles' reverse depth to buffer rfbo
 
       //give depth textures to blur shader (rendering to render target sdfbo)
       draw_blur_buffer(shaders["blur"], dfbo, sdfbo, screenquad); // store blurred depth in sdfbo
@@ -204,24 +204,52 @@ void scene_model::basic_render(GLuint shader, scene_structure& scene){
 }
 
 // Draw particles' depth or reverse depth to specified render target
-void scene_model::draw_depth(GLuint buffer_id, GLuint shader, bool reverseDepth = false){
+// void scene_model::draw_depth(GLuint buffer_id, GLuint shader, bool reverseDepth = false){
+//   glUseProgram(shader);
+//   glBindVertexArray(billboard.data.vao); //opengl_debug();
+//   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, billboard.data.vbo_index); //opengl_debug();
+//   glBindFramebuffer(GL_FRAMEBUFFER, buffer_id);
+//   if(reverseDepth){
+//     glClearDepth(0.0f);
+//   }else{
+//     glClearDepth(1.0f);
+//   }
+//   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+//   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//   glEnable(GL_DEPTH_TEST);
+//   if(reverseDepth){
+//     glDepthFunc(GL_GREATER);
+//   }else{
+//     glDepthFunc(GL_LESS);
+//   }
+//   for(size_t k=0; k<particles.size(); ++k) {
+//     uniform(shader, "translation", particles[k].p); //opengl_debug();
+//     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr); //opengl_debug();
+//   }
+//   glDepthFunc(GL_LESS);
+//   glDisable(GL_DEPTH_TEST);
+//   glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); //opengl_debug();
+//   glBindVertexArray(0);
+// }
+
+// Draw particle's depth/reverse depth to buffer fbo
+void scene_model::draw_depth_buffer(GLuint shader, GLuint fbo[3], scene_structure& scene){
   glUseProgram(shader);
+  uniform(shader, "rotation", scene.camera.orientation); //opengl_debug();
+  uniform(shader, "scaling", sph_param.h); //opengl_debug();
+  uniform(shader,"perspective",scene.camera.perspective.matrix()); //opengl_debug();
+  uniform(shader,"view",scene.camera.view_matrix()); //opengl_debug();
+  uniform(shader,"camera_position",scene.camera.camera_position()); //opengl_debug();
+  uniform(shader,"radius",sph_param.h); //opengl_debug();
   glBindVertexArray(billboard.data.vao); //opengl_debug();
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, billboard.data.vbo_index); //opengl_debug();
-  glBindFramebuffer(GL_FRAMEBUFFER, buffer_id);
-  if(reverseDepth){
-    glClearDepth(0.0f);
-  }else{
-    glClearDepth(1.0f);
-  }
+  glBindFramebuffer(GL_FRAMEBUFFER, fbo[0]);
+  glClearDepth(1.0f);
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
-  if(reverseDepth){
-    glDepthFunc(GL_GREATER);
-  }else{
-    glDepthFunc(GL_LESS);
-  }
+  glDepthFunc(GL_LESS);
   for(size_t k=0; k<particles.size(); ++k) {
     uniform(shader, "translation", particles[k].p); //opengl_debug();
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr); //opengl_debug();
@@ -233,8 +261,7 @@ void scene_model::draw_depth(GLuint buffer_id, GLuint shader, bool reverseDepth 
   glBindVertexArray(0);
 }
 
-// Draw particle's depth/reverse depth to buffer fbo
-void scene_model::draw_depth_buffer(GLuint shader, GLuint fbo[3], scene_structure& scene, bool reverseDepth){
+void scene_model::draw_thickness_buffer(GLuint shader, GLuint fbo[3], scene_structure& scene){
   glUseProgram(shader);
   uniform(shader, "rotation", scene.camera.orientation); //opengl_debug();
   uniform(shader, "scaling", sph_param.h); //opengl_debug();
@@ -242,8 +269,22 @@ void scene_model::draw_depth_buffer(GLuint shader, GLuint fbo[3], scene_structur
   uniform(shader,"view",scene.camera.view_matrix()); //opengl_debug();
   uniform(shader,"camera_position",scene.camera.camera_position()); //opengl_debug();
   uniform(shader,"radius",sph_param.h); //opengl_debug();
-  draw(borders, scene.camera);
-  draw_depth(fbo[0], shader, reverseDepth);
+  glBindVertexArray(billboard.data.vao); //opengl_debug();
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, billboard.data.vbo_index); //opengl_debug();
+  glBindFramebuffer(GL_FRAMEBUFFER, fbo[0]);
+  glClearDepth(1.0f);
+  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  for(size_t k=0; k<particles.size(); ++k) {
+    uniform(shader, "translation", particles[k].p); //opengl_debug();
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr); //opengl_debug();
+  }
+  glDisable(GL_BLEND);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); //opengl_debug();
+  glBindVertexArray(0);
 }
 
 // Blur source buffer and render to target buffer (bilateral gaussian blur)
