@@ -54,6 +54,7 @@ void load_shaders(std::map<std::string,GLuint>& shaders)
     shaders["curve"] = create_shader_program("scenes/shared_assets/shaders/curve/shader.vert.glsl","scenes/shared_assets/shaders/curve/shader.frag.glsl");
     shaders["segment_im"] = create_shader_program("scenes/shared_assets/shaders/segment_immediate_mode/shader.vert.glsl","scenes/shared_assets/shaders/segment_immediate_mode/shader.frag.glsl");
     shaders["normals"] = create_shader_program("scenes/shared_assets/shaders/normals/shader.vert.glsl","scenes/shared_assets/shaders/normals/shader.geom.glsl","scenes/shared_assets/shaders/normals/shader.frag.glsl");
+    shaders["basic_fluid"] = create_shader_program("scenes/shared_assets/shaders/basic_fluid/shader.vert.glsl","scenes/shared_assets/shaders/basic_fluid/shader.frag.glsl");
     shaders["depth"] = create_shader_program("scenes/shared_assets/shaders/depth/shader.vert.glsl","scenes/shared_assets/shaders/depth/shader.frag.glsl");
     shaders["thickness"] = create_shader_program("scenes/shared_assets/shaders/thickness/shader.vert.glsl","scenes/shared_assets/shaders/thickness/shader.frag.glsl");
     shaders["render_target"] = create_shader_program("scenes/shared_assets/shaders/render_target/shader.vert.glsl","scenes/shared_assets/shaders/render_target/shader.frag.glsl");

@@ -144,6 +144,7 @@ void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_struct
     gui_param.display_particles = true;
     gui_param.save_field = false;
     gui_param.world_space_gravity = false;
+    gui_param.advanced_shading = false;
 
     //Initializing render target framebuffers
     oglHelper.initializeFBO(dfbo, true);
@@ -159,16 +160,47 @@ void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_struct
 // Render fluid
 void scene_model::display(std::map<std::string,GLuint>& shaders, scene_structure& scene, gui_structure& gui)
 {
-    //draw particles depth/reverse depth to render target textures
-    draw_depth_buffer(shaders["depth"], dfbo, scene, false); //draw particles' depth to buffer dfbo
-    draw_depth_buffer(shaders["thickness"], rfbo, scene, true); //draw particles' reverse depth to buffer rfbo
+    if(gui_param.advanced_shading){
+      //draw particles depth/reverse depth to render target textures
+      draw_depth_buffer(shaders["depth"], dfbo, scene, false); //draw particles' depth to buffer dfbo
+      draw_depth_buffer(shaders["thickness"], rfbo, scene, true); //draw particles' reverse depth to buffer rfbo
 
-    //give depth textures to blur shader (rendering to render target sdfbo)
-    draw_blur_buffer(shaders["blur"], dfbo, sdfbo, screenquad); // store blurred depth in sdfbo
-    draw_blur_buffer(shaders["blur"], rfbo, srfbo, screenquad); // store blurred reverse depth in srfbo
+      //give depth textures to blur shader (rendering to render target sdfbo)
+      draw_blur_buffer(shaders["blur"], dfbo, sdfbo, screenquad); // store blurred depth in sdfbo
+      draw_blur_buffer(shaders["blur"], rfbo, srfbo, screenquad); // store blurred reverse depth in srfbo
 
-    //give depth texture and reverse depth texture to screenquad's shader (rendering a quad on screen)
-    render_to_screen(scene);
+      //give depth texture and reverse depth texture to screenquad's shader (rendering a quad on screen)
+      render_to_screen(scene);
+    }else{
+      basic_render(shaders["basic_fluid"], scene);
+    }
+}
+
+void scene_model::basic_render(GLuint shader, scene_structure& scene){
+  glClearDepth(1.0);
+  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  draw(borders, scene.camera);
+  glUseProgram(shader);
+  uniform(shader, "rotation", scene.camera.orientation); opengl_debug();
+  uniform(shader, "scaling", sph_param.h * 2 / 3); opengl_debug();
+  uniform(shader,"perspective",scene.camera.perspective.matrix()); opengl_debug();
+  uniform(shader,"view",scene.camera.view_matrix()); opengl_debug();
+  uniform(shader,"camera_position",scene.camera.camera_position()); opengl_debug();
+  uniform(shader,"radius",sph_param.h); opengl_debug();
+  glBindVertexArray(billboard.data.vao); opengl_debug();
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, billboard.data.vbo_index); opengl_debug();
+  glBindFramebuffer(GL_FRAMEBUFFER, 0); opengl_debug();
+  glEnable(GL_DEPTH_TEST); opengl_debug();
+  glDepthFunc(GL_LESS); opengl_debug();
+  for(size_t k=0; k<particles.size(); ++k) {
+    uniform(shader, "translation", particles[k].p); opengl_debug();
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr); opengl_debug();
+  }
+  glDepthFunc(GL_LESS);
+  glDisable(GL_DEPTH_TEST);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); opengl_debug();
+  glBindVertexArray(0);
 }
 
 // Draw particles' depth or reverse depth to specified render target
@@ -234,7 +266,7 @@ void scene_model::draw_blur_buffer(GLuint shader, GLuint source[3], GLuint targe
   glBindVertexArray(0);
 }
 
-// Render result to screen 
+// Render result to screen
 void scene_model::render_to_screen(scene_structure& scene){
   GLuint shader = screenquad.shader; // = shaders['render target']
   glUseProgram(shader);
@@ -250,6 +282,7 @@ void scene_model::render_to_screen(scene_structure& scene){
   draw(screenquad, scene.camera);
   glDisable(GL_BLEND);
   draw(borders, scene.camera);
+  glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void scene_model::set_gui()
@@ -258,6 +291,7 @@ void scene_model::set_gui()
     // ImGui::SliderScalar("Time scale", ImGuiDataType_Float, &timer.scale, &scale_min, &scale_max, "%.2f s");
 
     ImGui::Checkbox("World Space Gravity", &gui_param.world_space_gravity);
+    ImGui::Checkbox("Advanced Shading", &gui_param.advanced_shading);
 
     // Start and stop animation
     if (ImGui::Button("Stop"))
