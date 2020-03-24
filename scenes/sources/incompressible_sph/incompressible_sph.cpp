@@ -273,6 +273,9 @@ void scene_model::render_to_screen(scene_structure& scene){
   GLuint shader = screenquad.shader; // = shaders['render target']
   glUseProgram(shader);
   uniform(shader, "rotation", scene.camera.orientation); //opengl_debug();
+  uniform(shader, "view", scene.camera.view_matrix()); //opengl_debug();
+  uniform(shader,"perspective",scene.camera.perspective.matrix()); //opengl_debug();
+  uniform(shader,"camera_position",scene.camera.camera_position()); //opengl_debug();
   glUniform1i(glGetUniformLocation(shader, "depth_tex_sampler"), 0);
   glUniform1i(glGetUniformLocation(shader, "rev_depth_tex_sampler"), 1);
   glActiveTexture(GL_TEXTURE0 + 0); // Texture unit 0
