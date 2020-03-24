@@ -101,6 +101,8 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
         current_time = std::chrono::high_resolution_clock::now();
         post_solver_time = alpha_time*post_solver_time + (1-alpha_time)*std::chrono::duration_cast<std::chrono::milliseconds>(current_time-last_time).count();
         last_time = current_time;
+
+        oclHelper.log_pressure();
     }
 
     // Render the fluid

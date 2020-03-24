@@ -44,7 +44,8 @@ float3 gradW(float h, float3 p){
   }
 }
 
-
+// kernel called before the iterative solver, update v with the gravity, 
+// and compute the nexte position for each particles, before the correction
 __kernel void befor_solver(__global const struct sph_parameters* param, __global const float3 *p, __global float3 *v, __global float3 *q){
     int i = get_global_id(0);
     float3 g = {param->gx, param->gy, param->gz};
@@ -52,12 +53,15 @@ __kernel void befor_solver(__global const struct sph_parameters* param, __global
     q[i] = p[i] + param->dt * v[i];
 }
 
+// Update the position, from the position given y the solver
+// Compute the new speed
 __kernel void update_position_speed(__global const struct sph_parameters* param, __global const float3 *q, __global float3 *p, __global float3 *v_copy){
     int i = get_global_id(0);
     v_copy[i] = (q[i] - p[i])/param->dt;
     p[i] = q[i];
 }
 
+// compute w for the calcul of the vorticity
 __kernel void update_w(__global const struct sph_parameters* param, __global const float3 *p, __global const int *neighbors, __global const int *n_neighbors, __global const float3 *v_copy, __global float3 *w){
     int i = get_global_id(0);
     w[i] = float3(0.f, 0.f, 0.f);
@@ -68,6 +72,7 @@ __kernel void update_w(__global const struct sph_parameters* param, __global con
     }
 }
 
+// Apply the vorticity to each particles
 __kernel void apply_vorticity(__global const struct sph_parameters* param, __global const float3 *p,  __global const int *neighbors, __global const int *n_neighbors, __global float3 *v_copy, __global const float3 *w){
     int i = get_global_id(0);
     int n = min(param->nb_neighbors-1, n_neighbors[i]);
@@ -80,6 +85,7 @@ __kernel void apply_vorticity(__global const struct sph_parameters* param, __glo
     v_copy[i] += param->dt*param->h*0.001f*cross(eta,w[i]); //0.004 is maximum for stable
 }
 
+// apply the viscosity to each particles
 __kernel void apply_viscosity(__global const struct sph_parameters* param, __global const float3 *p, __global const int *neighbors, __global const int *n_neighbors, __global const float3 *v_copy, __global float3 *v){
     int i = get_global_id(0);
     float alpha = 0;
@@ -94,4 +100,17 @@ __kernel void apply_viscosity(__global const struct sph_parameters* param, __glo
     }
     //alpha = min(1.f,alpha);
     v[i] += (1-alpha) * v_copy[i];
+}
+
+// compute the pressure at each particle, for logging
+__kernel void compute_pressure(__global const struct sph_parameters* param, __global const float3 *p, __global const int *neighbors, __global const int *n_neighbors, __global float *pressure){
+    int i = get_global_id(0);
+    int n = min(param->nb_neighbors-1, n_neighbors[i]);
+    float rho = 0.f;
+    for (int j_idx = 0; j_idx < n; j_idx++) {
+        int j = neighbors[param->nb_neighbors * i + j_idx];
+        rho += W(param->h, p[i] - p[j]);
+    }
+    rho *= param->m;
+    pressure[i] = rho/param->rho0;
 }

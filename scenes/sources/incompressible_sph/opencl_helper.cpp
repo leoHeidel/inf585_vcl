@@ -46,6 +46,8 @@ void OCLHelper::init_context(sph_parameters sph_param){
     init_solver_program();
     init_speed_program();
     set_sph_param(sph_param);
+
+    pressure_log_file.open("pressure_log.csv");
 }
 
 void OCLHelper::init_buffers(){
@@ -62,6 +64,7 @@ void OCLHelper::init_buffers(){
     v_mem = clCreateBuffer(context, CL_MEM_READ_WRITE, nb_particles * sizeof(cl_float3), NULL, &ret);
     v_copy_mem = clCreateBuffer(context, CL_MEM_READ_WRITE, nb_particles * sizeof(cl_float3), NULL, &ret);
     w_mem = clCreateBuffer(context, CL_MEM_READ_WRITE, nb_particles * sizeof(cl_float3), NULL, &ret);
+    pressure_mem = clCreateBuffer(context, CL_MEM_WRITE_ONLY, nb_particles * sizeof(cl_float), NULL, &ret);
  }
 
 
@@ -125,6 +128,7 @@ void OCLHelper::init_speed_program(){
     update_w_kernel = clCreateKernel(speed_program, "update_w", &ret);
     apply_vorticity_kernel = clCreateKernel(speed_program, "apply_vorticity", &ret);
     apply_viscosity_kernel = clCreateKernel(speed_program, "apply_viscosity", &ret);
+    compute_pressure_kernel = clCreateKernel(speed_program, "compute_pressure", &ret);
 
     // Set the arguments of the kernels
     ret = clSetKernelArg(befor_solver_kernel, 0, sizeof(cl_mem), (void *)&sph_param_mem);
@@ -157,7 +161,12 @@ void OCLHelper::init_speed_program(){
     ret = clSetKernelArg(apply_viscosity_kernel, 3, sizeof(cl_mem), (void *)&n_neighbors_mem);
     ret = clSetKernelArg(apply_viscosity_kernel, 4, sizeof(cl_mem), (void *)&v_copy_mem);
     ret = clSetKernelArg(apply_viscosity_kernel, 5, sizeof(cl_mem), (void *)&v_mem);
-
+    
+    ret = clSetKernelArg(compute_pressure_kernel, 0, sizeof(cl_mem), (void *)&sph_param_mem);
+    ret = clSetKernelArg(compute_pressure_kernel, 1, sizeof(cl_mem), (void *)&p_mem);
+    ret = clSetKernelArg(compute_pressure_kernel, 2, sizeof(cl_mem), (void *)&neighbors_mem);
+    ret = clSetKernelArg(compute_pressure_kernel, 3, sizeof(cl_mem), (void *)&n_neighbors_mem);
+    ret = clSetKernelArg(compute_pressure_kernel, 4, sizeof(cl_mem), (void *)&pressure_mem);
 }
 
 cl_program OCLHelper::load_source(std::string kernelName){
@@ -328,6 +337,7 @@ void OCLHelper::set_p_v(std::vector<vec3> positions, std::vector<vec3> v){
     free (v_array);
     free(positions_array);
 }
+
 void OCLHelper::befor_solver(){
     cl_event  barrier;
     cl_int ret;
@@ -338,8 +348,28 @@ void OCLHelper::befor_solver(){
     clFinish(command_queue);
 }
 
+void OCLHelper::log_pressure(){
+    cl_int ret;
+    cl_event  barrier;
+    ret = clEnqueueBarrierWithWaitList(command_queue, 0, NULL, &barrier);
+    cl_float *result = (cl_float*)malloc(sizeof(cl_float) * nb_particles);
+    size_t global_item_size = nb_particles;
+    ret = clEnqueueNDRangeKernel(command_queue, compute_pressure_kernel, 1, NULL,
+            &global_item_size, &local_item_size, 1, &barrier, &barrier);
+    ret = clEnqueueReadBuffer(command_queue, pressure_mem, CL_TRUE, 0,
+            sizeof(cl_float) * nb_particles, result, 1, &barrier, NULL);
+    for (size_t i = 0; i < nb_particles; i++)
+    {
+        pressure_log_file << result[i] << ",";
+    }
+    pressure_log_file << std::endl;
+    free(result);
+}
+
 
 OCLHelper::~OCLHelper(){
+    pressure_log_file.close();
+
     cl_int ret;
 
     ret = clReleaseKernel(fill_hashmap_kernel);
@@ -353,6 +383,9 @@ OCLHelper::~OCLHelper(){
     ret = clReleaseKernel(befor_solver_kernel);
     ret = clReleaseKernel(update_position_speed_kernel);
     ret = clReleaseKernel(apply_viscosity_kernel);
+    ret = clReleaseKernel(update_w_kernel);
+    ret = clReleaseKernel(apply_vorticity_kernel);
+    ret = clReleaseKernel(compute_pressure_kernel);
 
     ret = clReleaseProgram(hashmap_program);
     ret = clReleaseProgram(solver_program);
@@ -369,6 +402,8 @@ OCLHelper::~OCLHelper(){
     ret = clReleaseMemObject(dp_mem);
     ret = clReleaseMemObject(v_mem);
     ret = clReleaseMemObject(v_copy_mem);
+    ret = clReleaseMemObject(w_mem);
+    ret = clReleaseMemObject(pressure_mem);
 
     ret = clFlush(command_queue);
     ret = clFinish(command_queue);

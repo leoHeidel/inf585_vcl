@@ -6,6 +6,7 @@
 #include <CL/cl.h>
 #endif
 #include <string>
+#include <fstream>
 
 #include "vcl/vcl.hpp"
 
@@ -55,6 +56,7 @@ struct OCLHelper {
     cl_mem v_mem;
     cl_mem v_copy_mem;
     cl_mem w_mem;
+    cl_mem pressure_mem;
 
     cl_program hashmap_program;
     cl_program solver_program;
@@ -73,11 +75,14 @@ struct OCLHelper {
     cl_kernel update_w_kernel;
     cl_kernel apply_vorticity_kernel;
     cl_kernel apply_viscosity_kernel;
+    cl_kernel compute_pressure_kernel;
 
     float alpha_time = 0.6;
     float nn1_time;
     float nn2_time;
     float nn3_time;
+
+    std::ofstream pressure_log_file;
 
     void init_context(sph_parameters sph_param);
 
@@ -89,6 +94,7 @@ struct OCLHelper {
     void make_neighboors();
     void solver_step();
     void update_speed();
+    void log_pressure();
 
     ~OCLHelper();
 

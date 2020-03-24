@@ -44,7 +44,7 @@ float3 gradW(float h, float3 p){
   }
 }
 
-
+// Compute the constrain: lamda for each particles
 __kernel void compute_constraints(__global const struct sph_parameters* param, __global const float3 *q, __global const int *neighbors,
       __global const int *n_neighbors, __global float *lambda) {
   int i = get_global_id(0);
@@ -65,6 +65,7 @@ __kernel void compute_constraints(__global const struct sph_parameters* param, _
   lambda[i] /= param->m * param->m;
 }
 
+// From the constraints, compute the nex dp
 __kernel void compute_dp(__global const struct sph_parameters* param, __global const float3 *q, __global const int *neighbors,
       __global const int *n_neighbors, __global const float *lambda, __global float3 *dp){
   int i = get_global_id(0);
@@ -83,6 +84,7 @@ __kernel void compute_dp(__global const struct sph_parameters* param, __global c
   dp[i] /= d;
 }
 
+//Enforce that the particles stay confined in the box
 __kernel void solve_collisions(__global const struct sph_parameters* param,  __global const float3 *q, __global float3 *dp){
     int i = get_global_id(0);
     float3 d = q[i]+ dp[i];
@@ -93,6 +95,7 @@ __kernel void solve_collisions(__global const struct sph_parameters* param,  __g
     dp[i] =  d - q[i];
 }
 
+// apply the result of the solver step
 __kernel void add_position_correction(__global const float3 *dp, __global float3 *q){
   int i = get_global_id(0);
   q[i] += dp[i];
