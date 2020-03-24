@@ -301,8 +301,6 @@ void scene_model::set_gui()
     float c_min = 0.05f, c_max = 0.5f;
     ImGui::SliderScalar("viscuosity", ImGuiDataType_Float, &sph_param.c, &c_min, &c_max, "%.3f");
 
-
-
     ImGui::Checkbox("World Space Gravity", &gui_param.world_space_gravity);
     ImGui::Checkbox("Advanced Shading", &gui_param.advanced_shading);
 }
