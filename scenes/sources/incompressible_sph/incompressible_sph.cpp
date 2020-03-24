@@ -290,17 +290,19 @@ void scene_model::render_to_screen(scene_structure& scene){
 
 void scene_model::set_gui()
 {
-    // Can set the speed of the animation
-    // ImGui::SliderScalar("Time scale", ImGuiDataType_Float, &timer.scale, &scale_min, &scale_max, "%.2f s");
+    float dt_min = 0.01f, dt_max = 0.05f;
+    ImGui::SliderScalar("dt", ImGuiDataType_Float, &sph_param.dt, &dt_min, &dt_max, "%.3f");
+    float h_min = 0.01f, h_max = 0.1f;
+    ImGui::SliderScalar("h", ImGuiDataType_Float, &sph_param.h, &h_min, &h_max, "%.3f");
+    float m_min = 0.1f, m_max = 5.f;
+    ImGui::SliderScalar("m", ImGuiDataType_Float, &sph_param.m, &m_min, &m_max, "%.3f");
+    float c_min = 0.05f, c_max = 0.5f;
+    ImGui::SliderScalar("viscuosity", ImGuiDataType_Float, &sph_param.c, &c_min, &c_max, "%.3f");
+
+
 
     ImGui::Checkbox("World Space Gravity", &gui_param.world_space_gravity);
     ImGui::Checkbox("Advanced Shading", &gui_param.advanced_shading);
-
-    // Start and stop animation
-    if (ImGui::Button("Stop"))
-        timer.stop();
-    if (ImGui::Button("Start"))
-        timer.start();
 }
 
 #endif
