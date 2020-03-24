@@ -203,36 +203,6 @@ void scene_model::basic_render(GLuint shader, scene_structure& scene){
   glBindVertexArray(0);
 }
 
-// Draw particles' depth or reverse depth to specified render target
-// void scene_model::draw_depth(GLuint buffer_id, GLuint shader, bool reverseDepth = false){
-//   glUseProgram(shader);
-//   glBindVertexArray(billboard.data.vao); //opengl_debug();
-//   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, billboard.data.vbo_index); //opengl_debug();
-//   glBindFramebuffer(GL_FRAMEBUFFER, buffer_id);
-//   if(reverseDepth){
-//     glClearDepth(0.0f);
-//   }else{
-//     glClearDepth(1.0f);
-//   }
-//   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-//   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//   glEnable(GL_DEPTH_TEST);
-//   if(reverseDepth){
-//     glDepthFunc(GL_GREATER);
-//   }else{
-//     glDepthFunc(GL_LESS);
-//   }
-//   for(size_t k=0; k<particles.size(); ++k) {
-//     uniform(shader, "translation", particles[k].p); //opengl_debug();
-//     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr); //opengl_debug();
-//   }
-//   glDepthFunc(GL_LESS);
-//   glDisable(GL_DEPTH_TEST);
-//   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-//   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); //opengl_debug();
-//   glBindVertexArray(0);
-// }
-
 // Draw particle's depth/reverse depth to buffer fbo
 void scene_model::draw_depth_buffer(GLuint shader, GLuint fbo[3], scene_structure& scene){
   glUseProgram(shader);
