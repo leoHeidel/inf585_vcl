@@ -53,7 +53,10 @@ struct scene_model : scene_base
     GLuint rfbo[3]; //reverse depth texture
     GLuint sdfbo[3]; //smoothed depth texture
     GLuint srfbo[3]; //smoothed reverse depth texture
-    void drawOn(GLuint buffer_id, GLuint shader, bool reverseDepth);
+    void draw_depth(GLuint buffer_id, GLuint shader, bool reverseDepth);
+    void draw_depth_buffer(GLuint shader, GLuint fbo[3], scene_structure& scene, bool reverseDepth);
+    void draw_blur_buffer(GLuint shader, GLuint source[3], GLuint target[3], vcl::mesh_drawable quad);
+    void render_to_screen(scene_structure& scene);
 
     OCLHelper oclHelper;
     void initialize_sph();

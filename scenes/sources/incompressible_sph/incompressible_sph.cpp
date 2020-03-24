@@ -41,8 +41,6 @@ void scene_model::initialize_sph()
     oclHelper.set_p_v(positions,v);
 }
 
-
-
 void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_structure& scene, gui_structure& gui)
 {
     auto start_func = std::chrono::high_resolution_clock::now();
@@ -53,6 +51,8 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
         // Force constant time step
         size_t solverIterations = 3;
         auto last_time = std::chrono::high_resolution_clock::now();
+
+        // Setting gravity direction depending on option
         if(gui_param.world_space_gravity){
           sph_param.gx = (scene.camera.orientation*vec3(0.0f, -100.0*sph_param.h, 0.0f)).x;
           sph_param.gy = (scene.camera.orientation*vec3(0.0f, -100.0*sph_param.h, 0.0f)).y;
@@ -64,12 +64,15 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
           sph_param.gz = (vec3(0.0f, -100.0*sph_param.h, 0.0f)).z;
           oclHelper.set_sph_param(sph_param);
         }
+
+        // Update position and velocity
         oclHelper.befor_solver();
 
         auto current_time = std::chrono::high_resolution_clock::now();
         pre_solver_time = alpha_time*pre_solver_time + (1-alpha_time)*std::chrono::duration_cast<std::chrono::milliseconds>(current_time-last_time).count();
         last_time = current_time;
 
+        // Find particle neighbors
         oclHelper.make_neighboors();
         size_t k=0;
 
@@ -77,15 +80,17 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
         neighboors_time = alpha_time*neighboors_time + (1-alpha_time)*std::chrono::duration_cast<std::chrono::milliseconds>(current_time-last_time).count();
         last_time = current_time;
 
+        // Iteration loop adding constraints
         while(k<solverIterations){
-        oclHelper.solver_step();
-        ++k;
+          oclHelper.solver_step();
+          ++k;
         }
 
         current_time = std::chrono::high_resolution_clock::now();
         solver_time = alpha_time*solver_time + (1-alpha_time)*std::chrono::duration_cast<std::chrono::milliseconds>(current_time-last_time).count();
         last_time = current_time;
 
+        // Re-update speed (apply vorticity and viscosity)
         oclHelper.update_speed();
 
         std::vector<vcl::vec3> p_gpu = oclHelper.get_p();
@@ -98,6 +103,7 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
         last_time = current_time;
     }
 
+    // Render the fluid
     auto befor_display = std::chrono::high_resolution_clock::now();
     display(shaders, scene, gui);
     auto after_dislplay = std::chrono::high_resolution_clock::now();
@@ -122,6 +128,7 @@ void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_struct
 {
     gui.show_frame_camera = false;
 
+    // One billboard per particle
     billboard = mesh_drawable( mesh_primitive_quad());
 
     std::vector<vec3> borders_segments = {{-1,-1,-1},{1,-1,-1}, {1,-1,-1},{1,1,-1}, {1,1,-1},{-1,1,-1}, {-1,1,-1},{-1,-1,-1},
@@ -138,7 +145,7 @@ void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_struct
     gui_param.save_field = false;
     gui_param.world_space_gravity = false;
 
-    //Initializing depth render target framebuffer
+    //Initializing render target framebuffers
     oglHelper.initializeFBO(dfbo, true);
     oglHelper.initializeFBO(rfbo, true);
     oglHelper.initializeFBO(sdfbo, true);
@@ -149,8 +156,24 @@ void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_struct
     screenquad.shader = shaders["render_target"];
 }
 
-void scene_model::drawOn(GLuint buffer_id, GLuint shader, bool reverseDepth = false){
-  //glUseProgram(shader);
+// Render fluid
+void scene_model::display(std::map<std::string,GLuint>& shaders, scene_structure& scene, gui_structure& gui)
+{
+    //draw particles depth/reverse depth to render target textures
+    draw_depth_buffer(shaders["depth"], dfbo, scene, false); //draw particles' depth to buffer dfbo
+    draw_depth_buffer(shaders["thickness"], rfbo, scene, true); //draw particles' reverse depth to buffer rfbo
+
+    //give depth textures to blur shader (rendering to render target sdfbo)
+    draw_blur_buffer(shaders["blur"], dfbo, sdfbo, screenquad); // store blurred depth in sdfbo
+    draw_blur_buffer(shaders["blur"], rfbo, srfbo, screenquad); // store blurred reverse depth in srfbo
+
+    //give depth texture and reverse depth texture to screenquad's shader (rendering a quad on screen)
+    render_to_screen(scene);
+}
+
+// Draw particles' depth or reverse depth to specified render target
+void scene_model::draw_depth(GLuint buffer_id, GLuint shader, bool reverseDepth = false){
+  glUseProgram(shader);
   glBindVertexArray(billboard.data.vao); //opengl_debug();
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, billboard.data.vbo_index); //opengl_debug();
   glBindFramebuffer(GL_FRAMEBUFFER, buffer_id);
@@ -178,85 +201,56 @@ void scene_model::drawOn(GLuint buffer_id, GLuint shader, bool reverseDepth = fa
   glBindVertexArray(0);
 }
 
-void scene_model::display(std::map<std::string,GLuint>& shaders, scene_structure& scene, gui_structure& gui)
-{
-    //draw particles' depth to buffer dfbo
-    GLuint shader = shaders["depth"];
-    glUseProgram(shader);
-    uniform(shader, "rotation", scene.camera.orientation); //opengl_debug();
-    uniform(shader, "scaling", sph_param.h); //opengl_debug();
-    uniform(shader,"perspective",scene.camera.perspective.matrix()); //opengl_debug();
-    uniform(shader,"view",scene.camera.view_matrix()); //opengl_debug();
-    uniform(shader,"camera_position",scene.camera.camera_position()); //opengl_debug();
-    uniform(shader,"color",vec3(0.1, 0.4, 0.8)); //opengl_debug();
-    uniform(shader,"radius",sph_param.h); //opengl_debug();
-    drawOn(dfbo[0], shader, false);
-    draw(borders, scene.camera);
-
-    //draw particles' second depth to buffer rfbo
-    shader = shaders["thickness"];
-    glUseProgram(shader);
-    uniform(shader, "rotation", scene.camera.orientation); //opengl_debug();
-    uniform(shader, "scaling", sph_param.h); //opengl_debug();
-    uniform(shader,"perspective",scene.camera.perspective.matrix()); //opengl_debug();
-    uniform(shader,"view",scene.camera.view_matrix()); //opengl_debug();
-    uniform(shader,"camera_position",scene.camera.camera_position()); //opengl_debug();
-    uniform(shader,"color",vec3(0.1, 0.4, 0.8)); //opengl_debug();
-    uniform(shader,"radius",sph_param.h); //opengl_debug();
-    glUniform1i(glGetUniformLocation(shader, "depth_tex"), 0);
-    glActiveTexture(GL_TEXTURE0 + 0); // Texture unit 0
-    glBindTexture(GL_TEXTURE_2D, dfbo[1]); //sending dfbo[1] as uniform sampler2D to shader
-    drawOn(rfbo[0], shader, true);
-    draw(borders, scene.camera);
-
-    //give depth texture to blur shader (rendering to render target sdfbo)
-    shader = shaders["blur"];
-    glUseProgram(shader);
-    glBindVertexArray(screenquad.data.vao); //opengl_debug();
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, screenquad.data.vbo_index); //opengl_debug();
-
-    glBindFramebuffer(GL_FRAMEBUFFER, sdfbo[0]); //drawing to render target sdfbo
-    glUniform1i(glGetUniformLocation(shader, "depth_tex_sampler"), 0);
-    glActiveTexture(GL_TEXTURE0 + 0); // Texture unit 0
-    glBindTexture(GL_TEXTURE_2D, dfbo[1]); //sending dfbo[1] as uniform sampler2D to shader
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr); //opengl_debug(); //draw quad to render target
-    glDisable(GL_BLEND);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, srfbo[0]); //drawing to render target sdfbo
-    glUniform1i(glGetUniformLocation(shader, "depth_tex_sampler"), 0);
-    glActiveTexture(GL_TEXTURE0 + 0); // Texture unit 0
-    glBindTexture(GL_TEXTURE_2D, rfbo[1]); //sending rfbo[1] as uniform sampler2D to shader
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr); //opengl_debug(); //draw quad to render target
-    glDisable(GL_BLEND);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); //opengl_debug();
-    glBindVertexArray(0);
-
-    //give depth texture and reverse depth texture to screenquad's shader (rendering a quad on screen)
-    shader = screenquad.shader; // = shaders['render target']
-    glUseProgram(shader);
-    uniform(shader, "rotation", scene.camera.orientation); //opengl_debug();
-    uniform(shader,"color",vec3(0.3, 0.5, 0.8)); //opengl_debug();
-    glUniform1i(glGetUniformLocation(shader, "depth_tex_sampler"), 0);
-    glUniform1i(glGetUniformLocation(shader, "rev_depth_tex_sampler"), 1);
-    glActiveTexture(GL_TEXTURE0 + 0); // Texture unit 0
-    glBindTexture(GL_TEXTURE_2D, sdfbo[1]);
-    glActiveTexture(GL_TEXTURE0 + 1); // Texture unit 1
-    glBindTexture(GL_TEXTURE_2D, srfbo[1]);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    draw(screenquad, scene.camera);
-    glDisable(GL_BLEND);
-
-
+// Draw particle's depth/reverse depth to buffer fbo
+void scene_model::draw_depth_buffer(GLuint shader, GLuint fbo[3], scene_structure& scene, bool reverseDepth){
+  glUseProgram(shader);
+  uniform(shader, "rotation", scene.camera.orientation); //opengl_debug();
+  uniform(shader, "scaling", sph_param.h); //opengl_debug();
+  uniform(shader,"perspective",scene.camera.perspective.matrix()); //opengl_debug();
+  uniform(shader,"view",scene.camera.view_matrix()); //opengl_debug();
+  uniform(shader,"camera_position",scene.camera.camera_position()); //opengl_debug();
+  uniform(shader,"radius",sph_param.h); //opengl_debug();
+  draw(borders, scene.camera);
+  draw_depth(fbo[0], shader, reverseDepth);
 }
 
+// Blur source buffer and render to target buffer (bilateral gaussian blur)
+void scene_model::draw_blur_buffer(GLuint shader, GLuint source[3], GLuint target[3], mesh_drawable quad){
+  glUseProgram(shader);
+  glBindVertexArray(quad.data.vao); //opengl_debug();
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quad.data.vbo_index); //opengl_debug();
 
+  glBindFramebuffer(GL_FRAMEBUFFER, target[0]); //drawing to render target sdfbo
+  glUniform1i(glGetUniformLocation(shader, "depth_tex_sampler"), 0);
+  glActiveTexture(GL_TEXTURE0 + 0); // Texture unit 0
+  glBindTexture(GL_TEXTURE_2D, source[1]); //sending dfbo[1] as uniform sampler2D to shader
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr); //opengl_debug(); //draw quad to render target
+  glDisable(GL_BLEND);
+
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); //opengl_debug();
+  glBindVertexArray(0);
+}
+
+// Render result to screen 
+void scene_model::render_to_screen(scene_structure& scene){
+  GLuint shader = screenquad.shader; // = shaders['render target']
+  glUseProgram(shader);
+  uniform(shader, "rotation", scene.camera.orientation); //opengl_debug();
+  glUniform1i(glGetUniformLocation(shader, "depth_tex_sampler"), 0);
+  glUniform1i(glGetUniformLocation(shader, "rev_depth_tex_sampler"), 1);
+  glActiveTexture(GL_TEXTURE0 + 0); // Texture unit 0
+  glBindTexture(GL_TEXTURE_2D, sdfbo[1]);
+  glActiveTexture(GL_TEXTURE0 + 1); // Texture unit 1
+  glBindTexture(GL_TEXTURE_2D, srfbo[1]);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  draw(screenquad, scene.camera);
+  glDisable(GL_BLEND);
+  draw(borders, scene.camera);
+}
 
 void scene_model::set_gui()
 {
