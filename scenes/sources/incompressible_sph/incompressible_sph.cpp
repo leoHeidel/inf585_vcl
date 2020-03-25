@@ -148,7 +148,8 @@ void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_struct
     gui_param.display_particles = true;
     gui_param.save_field = false;
     gui_param.world_space_gravity = false;
-    gui_param.advanced_shading = true;
+    gui_param.advanced_shading = false;
+    gui_param.more_advanced_shading = false;
 
     //Initializing render target framebuffers
     oglHelper.initializeFBO(dfbo, true);
@@ -165,7 +166,10 @@ void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_struct
 // Render fluid
 void scene_model::display(std::map<std::string,GLuint>& shaders, scene_structure& scene, gui_structure& gui)
 {
-    if(gui_param.advanced_shading){
+    if(!gui_param.advanced_shading){
+      gui_param.more_advanced_shading = false;
+      basic_render(shaders["basic_fluid"], scene);
+    }else if(gui_param.advanced_shading && !gui_param.more_advanced_shading){
       //draw particles depth/reverse depth to render target textures
       draw_depth_buffer(shaders["depth"], dfbo, scene); //draw particles' depth to buffer dfbo
       draw_thickness_buffer(shaders["thickness"], rfbo, scene); //draw particles' reverse depth to buffer rfbo
@@ -175,23 +179,38 @@ void scene_model::display(std::map<std::string,GLuint>& shaders, scene_structure
       draw_blur_buffer(shaders["blur"], rfbo, srfbo, screenquad, true); // store blurred reverse depth in srfbo
 
       //give depth texture and reverse depth texture to screenquad's shader (rendering a quad on screen)
-      render_cube(cube.shader, bgfbo[0], scene, true);
-      draw_deformed_background(shaders["deform_background"], scene);
+      render_cube(cube.shader, 0, scene, true, false);
       render_to_screen(scene);
-      render_cube(cube.shader, 0, scene, false);
+      render_cube(cube.shader, 0, scene, false, false);
+    }else if(gui_param.advanced_shading && gui_param.more_advanced_shading){
+      //draw particles depth/reverse depth to render target textures
+      draw_depth_buffer(shaders["depth"], dfbo, scene); //draw particles' depth to buffer dfbo
+      draw_thickness_buffer(shaders["thickness"], rfbo, scene); //draw particles' reverse depth to buffer rfbo
+
+      //give depth textures to blur shader (rendering to render target sdfbo)
+      draw_blur_buffer(shaders["blur"], dfbo, sdfbo, screenquad, false); // store blurred depth in sdfbo
+      draw_blur_buffer(shaders["blur"], rfbo, srfbo, screenquad, true); // store blurred reverse depth in srfbo
+
+      //give depth texture and reverse depth texture to screenquad's shader (rendering a quad on screen)
+      render_cube(cube.shader, bgfbo[0], scene, true, true);
+      draw_deformed_background(shaders["deform_background"], scene); //background refraction
+      render_to_screen(scene);
+      render_cube(cube.shader, 0, scene, false, true);
     }else{
-      basic_render(shaders["basic_fluid"], scene);
+
     }
 }
 
-void scene_model::render_cube(GLuint shader, GLuint id, scene_structure& scene, bool isBack){
+// Handles the rendering of the cube's edges when Advanced shading option on
+void scene_model::render_cube(GLuint shader, GLuint id, scene_structure& scene, bool isBack, bool isChecker){
   const float pi = 3.14159265f;
   glUseProgram(shader);
   uniform(shader, "isBack", isBack); //opengl_debug();
+  uniform(shader, "isChecker", isChecker); //opengl_debug();
   uniform(shader, "scaling", 2.0f);
-  uniform(shader,"perspective",scene.camera.perspective.matrix()); opengl_debug();
+  uniform(shader,"perspective",scene.camera.perspective.matrix()); //opengl_debug();
   uniform(shader,"view",scene.camera.view_matrix()); opengl_debug();
-  uniform(shader,"camera_position",scene.camera.camera_position()); opengl_debug();
+  uniform(shader,"camera_position",scene.camera.camera_position()); //opengl_debug();
   glBindVertexArray(cube.data.vao); //opengl_debug();
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube.data.vbo_index); //opengl_debug();
   glBindFramebuffer(GL_FRAMEBUFFER, id);
@@ -229,6 +248,7 @@ void scene_model::render_cube(GLuint shader, GLuint id, scene_structure& scene, 
   glBindVertexArray(0);
 }
 
+// Draw deformed background to screen
 void scene_model::draw_deformed_background(GLuint shader, scene_structure& scene){
   glUseProgram(shader);
   glUniform1i(glGetUniformLocation(shader, "thickness_tex"), 0);
@@ -251,6 +271,7 @@ void scene_model::draw_deformed_background(GLuint shader, scene_structure& scene
   glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+// Basic render
 void scene_model::basic_render(GLuint shader, scene_structure& scene){
   glClearDepth(1.0);
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -389,6 +410,9 @@ void scene_model::set_gui()
 
     ImGui::Checkbox("World Space Gravity", &gui_param.world_space_gravity);
     ImGui::Checkbox("Advanced Shading", &gui_param.advanced_shading);
+    if(gui_param.advanced_shading){
+      ImGui::Checkbox("with Background refraction", &gui_param.more_advanced_shading);
+    }
 }
 
 #endif

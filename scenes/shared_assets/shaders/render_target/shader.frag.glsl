@@ -87,9 +87,9 @@ void main()
       float diffuse = clamp(dot(u,n), 0.0, 1.0);
 
       // Beer's law of absorption
-      float ar = exp(-10*(thickness.x));
-      float ag = exp(-4*(thickness.x));
-      float ab = exp(-2*(thickness.x));
+      float ar = exp(-5.0*(thickness.x));
+      float ag = exp(-2.0*(thickness.x));
+      float ab = exp(-1.0*(thickness.x));
       //+ vec3(ar, ag, ab) // fresnel * 0.1 +  // 1.2 - depth.x
       FragColor = vec4(vec3(fresnel * 0.05 + specular_value) + vec3(ar, ag, ab), 1.0 - ar);
       //FragColor = vec4(vec3(depth.x), 1.0);

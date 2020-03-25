@@ -21,6 +21,7 @@ uniform float diffuse  = 0.8;
 uniform float specular = 0.5;
 uniform int specular_exponent = 128;
 uniform bool isBack;
+uniform bool isChecker;
 
 vec3 light = vec3(camera_position.x, camera_position.y, camera_position.z);
 
@@ -45,7 +46,7 @@ void main()
     }else{
       float eps = -(view * fragment.position).z / (view * fragment.position).w * 0.0003;
       if(fragment.texture_uv.x > eps && fragment.texture_uv.x < 1.0-eps && fragment.texture_uv.y > eps && fragment.texture_uv.y < 1.0-eps){
-        if(isBack){
+        if(isBack && isChecker){
           float cx = floor(6.0 * fragment.texture_uv.x);
           float cy = floor(6.0 * fragment.texture_uv.y);
           float result = mod(cx + cy, 2.0);

@@ -34,6 +34,7 @@ struct gui_parameters
     bool save_field;
     bool world_space_gravity;
     bool advanced_shading;
+    bool more_advanced_shading;
 };
 
 
@@ -60,7 +61,7 @@ struct scene_model : scene_base
     void draw_thickness_buffer(GLuint shader, GLuint fbo[3], scene_structure& scene);
     void draw_blur_buffer(GLuint shader, GLuint source[3], GLuint target[3], vcl::mesh_drawable quad, bool isThickness);
     void render_to_screen(scene_structure& scene);
-    void render_cube(GLuint shader, GLuint id, scene_structure& scene, bool isBack);
+    void render_cube(GLuint shader, GLuint id, scene_structure& scene, bool isBack, bool isChecker);
     void draw_deformed_background(GLuint shader, scene_structure& scene);
 
     OCLHelper oclHelper;
