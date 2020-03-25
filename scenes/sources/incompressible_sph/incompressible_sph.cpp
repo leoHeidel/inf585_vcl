@@ -166,8 +166,8 @@ void scene_model::display(std::map<std::string,GLuint>& shaders, scene_structure
       draw_thickness_buffer(shaders["thickness"], rfbo, scene); //draw particles' reverse depth to buffer rfbo
 
       //give depth textures to blur shader (rendering to render target sdfbo)
-      draw_blur_buffer(shaders["blur"], dfbo, sdfbo, screenquad); // store blurred depth in sdfbo
-      draw_blur_buffer(shaders["blur"], rfbo, srfbo, screenquad); // store blurred reverse depth in srfbo
+      draw_blur_buffer(shaders["blur"], dfbo, sdfbo, screenquad, false); // store blurred depth in sdfbo
+      draw_blur_buffer(shaders["blur"], rfbo, srfbo, screenquad, true); // store blurred reverse depth in srfbo
 
       //give depth texture and reverse depth texture to screenquad's shader (rendering a quad on screen)
       render_to_screen(scene);
@@ -258,8 +258,9 @@ void scene_model::draw_thickness_buffer(GLuint shader, GLuint fbo[3], scene_stru
 }
 
 // Blur source buffer and render to target buffer (bilateral gaussian blur)
-void scene_model::draw_blur_buffer(GLuint shader, GLuint source[3], GLuint target[3], mesh_drawable quad){
+void scene_model::draw_blur_buffer(GLuint shader, GLuint source[3], GLuint target[3], mesh_drawable quad, bool isThickness){
   glUseProgram(shader);
+  uniform(shader, "isThickness", isThickness); //opengl_debug();
   glBindVertexArray(quad.data.vao); //opengl_debug();
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quad.data.vbo_index); //opengl_debug();
 

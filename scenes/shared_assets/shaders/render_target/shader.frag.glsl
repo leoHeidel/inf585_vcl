@@ -20,7 +20,7 @@ uniform mat3 rotation;
 uniform mat4 view;
 uniform mat4 perspective;
 
-vec3 light = vec3(0.0, 0.0, -2.0);
+vec3 light = vec3(0.0, 0.0, 1.0); //vec3(0.0, 0.0, -2.0);
 
 float near = 3.0;
 float far  = 10.0;
@@ -82,7 +82,7 @@ void main()
       t = normalize(vec3(0.0) - posEye); //camera's at origin in camera's frame
 
       // Rendering characteristics
-      float specular_value = 5.0 * pow(clamp(dot(r,t), 0.0, 1.0), 64);
+      float specular_value = 2.0 * pow(clamp(dot(r,t), 0.0, 1.0), 32);
       float fresnel = clamp(R0 + (1.0 - R0)*pow(1-dot(n,t), 5.0), 0.0, 1.0);
       float diffuse = clamp(dot(u,n), 0.0, 1.0);
 
@@ -91,7 +91,7 @@ void main()
       float ag = exp(-4.0*(thickness.x));
       float ab = exp(-2.0*(thickness.x));
       //+ vec3(ar, ag, ab) // fresnel * 0.1 +  // 1.2 - depth.x
-      FragColor = vec4(vec3(fresnel * 0.05 + specular_value) + vec3(ar, ag, ab), 1.2 - depth.x);
-      //FragColor = vec4(thickness, 1.0);
+      FragColor = vec4(vec3(fresnel * 0.05 + specular_value) + vec3(ar, ag, ab), 1.0 - depth.x);
+      //FragColor = vec4(vec3(depth.x), 1.0);
     }
 }

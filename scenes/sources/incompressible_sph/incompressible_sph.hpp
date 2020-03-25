@@ -57,7 +57,7 @@ struct scene_model : scene_base
     void basic_render(GLuint shader, scene_structure& scene);
     void draw_depth_buffer(GLuint shader, GLuint fbo[3], scene_structure& scene);
     void draw_thickness_buffer(GLuint shader, GLuint fbo[3], scene_structure& scene);
-    void draw_blur_buffer(GLuint shader, GLuint source[3], GLuint target[3], vcl::mesh_drawable quad);
+    void draw_blur_buffer(GLuint shader, GLuint source[3], GLuint target[3], vcl::mesh_drawable quad, bool isThickness);
     void render_to_screen(scene_structure& scene);
 
     OCLHelper oclHelper;
