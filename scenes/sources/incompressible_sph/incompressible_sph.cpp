@@ -138,6 +138,10 @@ void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_struct
     borders.uniform.color = {0,0,0};
     borders.shader = shaders["curve"];
 
+    cube = mesh_drawable(mesh_primitive_quad());
+    cube.uniform.color = {1,0,0};
+    cube.shader = shaders["fluid_box"];
+
     initialize_sph();
 
     gui_param.display_field = true;
@@ -151,6 +155,7 @@ void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_struct
     oglHelper.initializeFBO(rfbo, true);
     oglHelper.initializeFBO(sdfbo, true);
     oglHelper.initializeFBO(srfbo, true);
+    oglHelper.initializeFBO(bgfbo, false);
 
     //Set the texture to be shown on screen
     screenquad = mesh_drawable( mesh_primitive_quad(vec3(-1,-1,0),vec3(1,-1,0),vec3(1,1,0),vec3(-1,1,0)));
@@ -170,10 +175,80 @@ void scene_model::display(std::map<std::string,GLuint>& shaders, scene_structure
       draw_blur_buffer(shaders["blur"], rfbo, srfbo, screenquad, true); // store blurred reverse depth in srfbo
 
       //give depth texture and reverse depth texture to screenquad's shader (rendering a quad on screen)
+      render_cube(cube.shader, bgfbo[0], scene, true);
+      draw_deformed_background(shaders["deform_background"], scene);
       render_to_screen(scene);
+      render_cube(cube.shader, 0, scene, false);
     }else{
       basic_render(shaders["basic_fluid"], scene);
     }
+}
+
+void scene_model::render_cube(GLuint shader, GLuint id, scene_structure& scene, bool isBack){
+  const float pi = 3.14159265f;
+  glUseProgram(shader);
+  uniform(shader, "isBack", isBack); //opengl_debug();
+  uniform(shader, "scaling", 2.0f);
+  uniform(shader,"perspective",scene.camera.perspective.matrix()); opengl_debug();
+  uniform(shader,"view",scene.camera.view_matrix()); opengl_debug();
+  uniform(shader,"camera_position",scene.camera.camera_position()); opengl_debug();
+  glBindVertexArray(cube.data.vao); //opengl_debug();
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube.data.vbo_index); //opengl_debug();
+  glBindFramebuffer(GL_FRAMEBUFFER, id);
+  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+  glClearDepth(1.0);
+  if(isBack){
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  }
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable(GL_DEPTH_TEST);
+  uniform(shader, "translation", {1, 0, 0});
+  uniform(shader, "rotation", rotation_from_axis_angle_mat3({0, 1, 0}, pi/2.0f));
+  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr); //opengl_debug();
+  uniform(shader, "translation", vec3(-1, 0, 0));
+  uniform(shader, "rotation", rotation_from_axis_angle_mat3({0, 1, 0}, -pi/2.0f));
+  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr); //opengl_debug();
+  uniform(shader, "translation", vec3(0, 1, 0));
+  uniform(shader, "rotation", rotation_from_axis_angle_mat3({1, 0, 0}, -pi/2));
+  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr); //opengl_debug();
+  uniform(shader, "translation", vec3(0, -1, 0));
+  uniform(shader, "rotation", rotation_from_axis_angle_mat3({1, 0, 0}, pi/2));
+  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr); //opengl_debug();
+  uniform(shader, "translation", vec3(0, 0, 1));
+  uniform(shader, "rotation", rotation_from_axis_angle_mat3({0, 1, 0}, 0));
+  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr); //opengl_debug();
+  uniform(shader, "translation", vec3(0, 0, -1));
+  uniform(shader, "rotation", rotation_from_axis_angle_mat3({0, 1, 0}, pi));
+  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr); //opengl_debug();
+  glBindTexture(GL_TEXTURE_2D, 0);
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_BLEND);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); //opengl_debug();
+  glBindVertexArray(0);
+}
+
+void scene_model::draw_deformed_background(GLuint shader, scene_structure& scene){
+  glUseProgram(shader);
+  glUniform1i(glGetUniformLocation(shader, "thickness_tex"), 0);
+  glUniform1i(glGetUniformLocation(shader, "background_tex"), 1);
+  glUniform1i(glGetUniformLocation(shader, "depth_tex"), 2);
+  glActiveTexture(GL_TEXTURE0 + 0); // Texture unit 0
+  glBindTexture(GL_TEXTURE_2D, srfbo[1]);
+  glActiveTexture(GL_TEXTURE0 + 1); // Texture unit 1
+  glBindTexture(GL_TEXTURE_2D, bgfbo[1]);
+  glActiveTexture(GL_TEXTURE0 + 2); // Texture unit 2
+  glBindTexture(GL_TEXTURE_2D, sdfbo[1]);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBindVertexArray(screenquad.data.vao); opengl_debug();
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, screenquad.data.vbo_index); opengl_debug();
+  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr); opengl_debug();
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); opengl_debug();
+  glBindVertexArray(0);
+  glDisable(GL_BLEND);
+  glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void scene_model::basic_render(GLuint shader, scene_structure& scene){
@@ -265,8 +340,8 @@ void scene_model::draw_blur_buffer(GLuint shader, GLuint source[3], GLuint targe
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quad.data.vbo_index); //opengl_debug();
 
   glBindFramebuffer(GL_FRAMEBUFFER, target[0]); //drawing to render target sdfbo
-  glUniform1i(glGetUniformLocation(shader, "depth_tex_sampler"), 0);
-  glActiveTexture(GL_TEXTURE0 + 0); // Texture unit 0
+  glUniform1i(glGetUniformLocation(shader, "depth_tex_sampler"), 1);
+  glActiveTexture(GL_TEXTURE0 + 1); // Texture unit 0
   glBindTexture(GL_TEXTURE_2D, source[1]); //sending dfbo[1] as uniform sampler2D to shader
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -280,23 +355,24 @@ void scene_model::draw_blur_buffer(GLuint shader, GLuint source[3], GLuint targe
 
 // Render result to screen
 void scene_model::render_to_screen(scene_structure& scene){
+  //draw(borders, scene.camera);
   GLuint shader = screenquad.shader; // = shaders['render target']
   glUseProgram(shader);
   uniform(shader, "rotation", scene.camera.orientation); //opengl_debug();
   uniform(shader, "view", scene.camera.view_matrix()); //opengl_debug();
   uniform(shader,"perspective",scene.camera.perspective.matrix()); //opengl_debug();
   uniform(shader,"camera_position",scene.camera.camera_position()); //opengl_debug();
-  glUniform1i(glGetUniformLocation(shader, "depth_tex_sampler"), 0);
-  glUniform1i(glGetUniformLocation(shader, "rev_depth_tex_sampler"), 1);
-  glActiveTexture(GL_TEXTURE0 + 0); // Texture unit 0
+  glUniform1i(glGetUniformLocation(shader, "depth_tex_sampler"), 1);
+  glUniform1i(glGetUniformLocation(shader, "rev_depth_tex_sampler"), 2);
+  glActiveTexture(GL_TEXTURE0 + 1); // Texture unit 0
   glBindTexture(GL_TEXTURE_2D, sdfbo[1]);
-  glActiveTexture(GL_TEXTURE0 + 1); // Texture unit 1
+  glActiveTexture(GL_TEXTURE0 + 2); // Texture unit 1
   glBindTexture(GL_TEXTURE_2D, srfbo[1]);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   draw(screenquad, scene.camera);
   glDisable(GL_BLEND);
-  draw(borders, scene.camera);
+  //draw(borders, scene.camera);
   glBindTexture(GL_TEXTURE_2D, 0);
 }
 

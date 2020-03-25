@@ -87,9 +87,9 @@ __kernel void solve_collisions(__global const struct sph_parameters* param,  __g
     int i = get_global_id(0);
     float3 d = q[i]+ dp[i];
     float eps = 0.01f;
-    d.x = clamp(d.x, -1.f + 0.3f*((float) param->h) + eps*(i / (float) param->nb_particles), 1.f - 0.3f*((float) param->h) - eps*(i / (float) param->nb_particles));
-    d.y = clamp(d.y, -1.f + 0.3f*((float) param->h) + eps*(i / (float) param->nb_particles), 1.f - 0.3f*((float) param->h) - eps*(i / (float) param->nb_particles));
-    d.z = clamp(d.z, -1.f + 0.3f*((float) param->h) + eps*(i / (float) param->nb_particles), 1.f - 0.3f*((float) param->h) - eps*(i / (float) param->nb_particles));
+    d.x = clamp(d.x, -1.f + 0.5f*((float) param->h) + eps*(i / (float) param->nb_particles), 1.f - 0.5f*((float) param->h) - eps*(i / (float) param->nb_particles));
+    d.y = clamp(d.y, -1.f + 0.5f*((float) param->h) + eps*(i / (float) param->nb_particles), 1.f - 0.5f*((float) param->h) - eps*(i / (float) param->nb_particles));
+    d.z = clamp(d.z, -1.f + 0.5f*((float) param->h) + eps*(i / (float) param->nb_particles), 1.f - 0.5f*((float) param->h) - eps*(i / (float) param->nb_particles));
     dp[i] =  d - q[i];
 }
 

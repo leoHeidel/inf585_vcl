@@ -54,11 +54,14 @@ struct scene_model : scene_base
     GLuint rfbo[3]; //reverse depth texture
     GLuint sdfbo[3]; //smoothed depth texture
     GLuint srfbo[3]; //smoothed reverse depth texture
+    GLuint bgfbo[3]; //background fbo
     void basic_render(GLuint shader, scene_structure& scene);
     void draw_depth_buffer(GLuint shader, GLuint fbo[3], scene_structure& scene);
     void draw_thickness_buffer(GLuint shader, GLuint fbo[3], scene_structure& scene);
     void draw_blur_buffer(GLuint shader, GLuint source[3], GLuint target[3], vcl::mesh_drawable quad, bool isThickness);
     void render_to_screen(scene_structure& scene);
+    void render_cube(GLuint shader, GLuint id, scene_structure& scene, bool isBack);
+    void draw_deformed_background(GLuint shader, scene_structure& scene);
 
     OCLHelper oclHelper;
     void initialize_sph();
@@ -74,6 +77,7 @@ struct scene_model : scene_base
     gui_parameters gui_param;
     vcl::mesh_drawable sphere;
     vcl::mesh_drawable billboard;
+    vcl::mesh_drawable cube;
     vcl::mesh_drawable screenquad;
     vcl::segments_drawable borders;
     vcl::segments_drawable spheres;
