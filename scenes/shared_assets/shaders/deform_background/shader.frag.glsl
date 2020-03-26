@@ -10,8 +10,9 @@ in struct fragment_data
     vec2 texture_uv;
 } fragment;
 
-uniform sampler2D depth_tex_sampler;
-uniform sampler2D rev_depth_tex_sampler;
+uniform sampler2D thickness_tex;
+uniform sampler2D background_tex;
+uniform sampler2D depth_tex;
 
 out vec4 FragColor;
 
@@ -52,24 +53,24 @@ float LinearizeDepth(float depth)
 
 void main()
 {
-    vec4 depth = texture(depth_tex_sampler, fragment.texture_uv);
-    if(depth.x > 0.99){
-      discard;
+    float thickness = texture(thickness_tex, fragment.texture_uv).x;
+    vec4 depth = texture(depth_tex, fragment.texture_uv);
+    if(false){
+      FragColor = texture(background_tex, fragment.texture_uv);
     }else{
-      vec3 thickness = texture(rev_depth_tex_sampler, fragment.texture_uv).xyz;
-      vec3 posEye = getEyePos(depth_tex_sampler, fragment.texture_uv);
+      vec3 posEye = getEyePos(depth_tex, fragment.texture_uv);
       light += vec3(0.0, 0.0, -length(camera_position)); //make light still in camera's frame
 
       // Compute small change of position along x axis
-      vec3 ddx = getEyePos(depth_tex_sampler, fragment.texture_uv + vec2(texelSize, 0)) - posEye;
-      vec3 ddx2 = posEye - getEyePos(depth_tex_sampler, fragment.texture_uv + vec2(-texelSize, 0));
+      vec3 ddx = getEyePos(depth_tex, fragment.texture_uv + vec2(texelSize, 0)) - posEye;
+      vec3 ddx2 = posEye - getEyePos(depth_tex, fragment.texture_uv + vec2(-texelSize, 0));
       if (abs(ddx.z) > abs(ddx2.z)) {
         ddx = ddx2;
       }
 
       // Compute small change of position along y axis
-      vec3 ddy = getEyePos(depth_tex_sampler, fragment.texture_uv + vec2(0, texelSize)) - posEye;
-      vec3 ddy2 = posEye - getEyePos(depth_tex_sampler, fragment.texture_uv + vec2(0, -texelSize));
+      vec3 ddy = getEyePos(depth_tex, fragment.texture_uv + vec2(0, texelSize)) - posEye;
+      vec3 ddy2 = posEye - getEyePos(depth_tex, fragment.texture_uv + vec2(0, -texelSize));
       if (abs(ddy.z) > abs(ddy2.z)) {
         ddy = ddy2;
       }
@@ -77,21 +78,7 @@ void main()
       // Compute normal from cross product
       n = cross(ddx, ddy);
       n = normalize(n);
-      u = -normalize(light - posEye);
-      r = reflect(u,n);
-      t = normalize(vec3(0.0) - posEye); //camera's at origin in camera's frame
 
-      // Rendering characteristics
-      float specular_value = 2.0 * pow(clamp(dot(r,t), 0.0, 1.0), 32);
-      float fresnel = clamp(R0 + (1.0 - R0)*pow(1-dot(n,t), 5.0), 0.0, 1.0);
-      float diffuse = clamp(dot(u,n), 0.0, 1.0);
-
-      // Beer's law of absorption
-      float ar = exp(-5.0*(thickness.x));
-      float ag = exp(-2.0*(thickness.x));
-      float ab = exp(-1.0*(thickness.x));
-      //+ vec3(ar, ag, ab) // fresnel * 0.1 +  // 1.2 - depth.x
-      FragColor = vec4(vec3(fresnel * 0.05 + specular_value) + vec3(ar, ag, ab), 1.0 - ar);
-      //FragColor = vec4(vec3(depth.x), 1.0);
+      FragColor = texture(background_tex, fragment.texture_uv + thickness * n.xy);
     }
 }

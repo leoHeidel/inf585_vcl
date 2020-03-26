@@ -1,3 +1,7 @@
+# Project for the class INF585
+
+This repository is a fork from the original repository, here is the original README:
+
 # INF585 VCL
 
 ## Setup compilation in command line using the Makefile (in Linux only)

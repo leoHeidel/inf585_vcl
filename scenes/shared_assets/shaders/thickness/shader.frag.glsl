@@ -49,7 +49,7 @@ void main()
       diffuse = max(0.0, dot(normalize(light - fragment.position.xyz),rotation*n));
       viewDepth = viewSpacePos.z / viewSpacePos.w;
       depth = LinearizeDepth(viewDepth);
-      FragColor = vec4(vec3(depth), 1.0);
+      FragColor = vec4(vec3(1.0), n.z * 2 * radius / (far-near));
     }else{
       discard;
     }
