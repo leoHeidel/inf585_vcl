@@ -29,7 +29,13 @@ mat3 rotation_between_vector_mat3(const vec3& a, const vec3& b)
         return -mat3::identity();
 
     const float d = dot(u0,u1);
-    const float angle = std::acos( d );
+    float angle = std::acos( d );
+
+    if (isnan(angle))
+    {
+        angle = 0;
+    }
+    
 
     vec3 axis = normalize(cross(u0,u1));
 
